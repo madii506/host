@@ -499,3 +499,8 @@ body.app .pg-head { padding-top: 26px; }
 .plc { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px; border: 1px solid var(--line2); background: var(--bg2); font: 600 12px var(--mono); color: var(--mute); }
 .plc .ic { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: var(--vi3); display: grid; place-items: center; font: 700 11px var(--pix); color: var(--vi2); }
 .plc .ic img { width: 100%; height: 100%; object-fit: cover; } .plc.top { border-color: rgba(255, 180, 58, .5); color: var(--gold2); }
+
+/* the intro: no words, a fall through coins inside coins */
+.intro { position: fixed; inset: 0; z-index: 300; background: #050407; cursor: pointer; }
+.intro canvas { display: block; width: 100%; height: 100%; }
+html.intro-lock, html.intro-lock body { overflow: hidden; }
