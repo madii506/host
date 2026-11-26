@@ -408,7 +408,7 @@ body.page main { padding-top: 96px; }
 .cr span:last-child { color: var(--ink); background: rgba(255, 180, 58, .05); border-left: 1px solid rgba(255, 180, 58, .2); }
 .cr.hd span { font: 700 14px/1.4 var(--disp) !important; color: var(--ink); letter-spacing: 0 !important; text-transform: none !important; }
 .cr.hd span:last-child { color: var(--gold2); }
-.ok { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 10px; border-radius: 50%; background: var(--gold); color: #1d1405; font: 700 11px/1 var(--text); font-style: normal; }
+.cmp .ok { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 10px; border-radius: 50%; background: var(--gold); color: #1d1405; font: 700 11px/1 var(--text); font-style: normal; }
 .final { padding: 130px 0 120px; }
 .final .hook { margin: 10px 0 0; font: 500 clamp(18px, 1.8vw, 22px)/1.4 var(--text); color: #dcd5ef; }
 @media (max-width: 1000px) {
