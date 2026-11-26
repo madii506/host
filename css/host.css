@@ -493,3 +493,9 @@ body.app .pg-head { padding-top: 26px; }
 .hostpick .trow button img, .hostpick .trow button i { width: 20px; height: 20px; border-radius: 50%; background: var(--vi3); }
 .hostpick .trow button .chg { font-size: 11px; }
 .hostpick .trow button.on { border-color: var(--gold); color: var(--ink); }
+.pvplive { margin-top: 18px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 20px; background: rgba(17, 15, 23, .78); display: grid; gap: 14px; animation: pop .5s var(--ease); }
+.pl-h p { margin: 8px 0 0; color: var(--mute); font-size: 15.5px; max-width: 860px; } .pl-h b { color: var(--ink); }
+.pl-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.plc { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px; border: 1px solid var(--line2); background: var(--bg2); font: 600 12px var(--mono); color: var(--mute); }
+.plc .ic { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: var(--vi3); display: grid; place-items: center; font: 700 11px var(--pix); color: var(--vi2); }
+.plc .ic img { width: 100%; height: 100%; object-fit: cover; } .plc.top { border-color: rgba(255, 180, 58, .5); color: var(--gold2); }
