@@ -9,6 +9,7 @@
 //   POST /api/send   GET /api/status the signed launch, broadcast and watched
 //   GET  /api/list                   every coin launched through host, read from the chain
 //   GET  /api/pump                   pump coins trending on Jupiter right now, and the newest ones
+//   GET  /api/copies?symbol=         how many tokens share one ticker right now: PvP, measured
 'use strict';
 const { Connection, PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction, ComputeBudgetProgram } = require('@solana/web3.js');
 const BN = require('bn.js');
@@ -103,6 +104,18 @@ async function pumpBoard() {
   const map = t => ({ mint: t.id, symbol: t.symbol || null, name: t.name || null, icon: t.icon || null, usd: t.usdPrice ?? null, mcap: t.mcap ? Math.round(t.mcap) : null, ch1h: pc(t.stats1h && t.stats1h.priceChange), ch24h: pc(t.stats24h && t.stats24h.priceChange), traders1h: (t.stats1h && t.stats1h.numTraders) || null, grad: !!t.graduatedPool, at: t.createdAt || null });
   const v = { ok: true, trending: (Array.isArray(tr) ? tr : []).filter(isPump).slice(0, 24).map(map), fresh: (Array.isArray(rc) ? rc : []).filter(isPump).slice(0, 12).map(map) };
   if (v.trending.length || v.fresh.length) pumpCache = { t: Date.now(), v };
+  return v;
+}
+
+// ---------- PvP, measured: how many tokens share one ticker right now (Jupiter's search)
+const copyCache = new Map();
+async function copies(symRaw) {
+  const sym = clean(symRaw, 24).replace(/^\$/, ''); if (!sym) throw new Error('Give a ticker.');
+  const key = sym.toLowerCase(), hit = copyCache.get(key); if (hit && Date.now() - hit.t < 120000) return hit.v;
+  let j = []; try { const r = await fetch('https://lite-api.jup.ag/tokens/v2/search?query=' + encodeURIComponent(sym), { signal: AbortSignal.timeout(9000) }); j = r.ok ? await r.json() : []; } catch { j = []; }
+  const all = Array.isArray(j) ? j : [], same = all.filter(t => String(t.symbol || '').replace(/^\$/, '').toLowerCase() === key).sort((a, b) => (b.mcap || 0) - (a.mcap || 0));
+  const v = { ok: true, symbol: sym, count: same.length, capped: all.length >= 20, coins: same.slice(0, 12).map(t => ({ mint: t.id, name: t.name || null, icon: t.icon || null, mcap: t.mcap ? Math.round(t.mcap) : null, launchpad: t.launchpad || null, at: t.createdAt || null })) };
+  copyCache.set(key, { t: Date.now(), v }); if (copyCache.size > 200) copyCache.clear();
   return v;
 }
 
@@ -336,6 +349,7 @@ module.exports = async (req, res) => {
     if (p === 'balance') return out(res, 200, await balance(q.get('wallet'), q.get('mint')));
     if (p === 'list') return out(res, 200, await list(), 's-maxage=15, stale-while-revalidate=60');
     if (p === 'pump') return out(res, 200, await pumpBoard(), 's-maxage=60, stale-while-revalidate=300');
+    if (p === 'copies') return out(res, 200, await copies(q.get('symbol')), 's-maxage=120, stale-while-revalidate=600');
     if (p === 'status') return out(res, 200, await status(q));
     if (req.method === 'POST' && p === 'meta') return out(res, 200, await meta(req));
     if (req.method === 'POST' && p === 'build') return out(res, 200, await build(req));
