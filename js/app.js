@@ -214,7 +214,7 @@ async function launch() {
   flow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   const hs = HS(), hm = host.mint;
   try {
-    step('meta', 'run', 'Uploading through pump.fun…');
+    step('meta', 'run', 'Storing your image and details…');
     const key = JSON.stringify([n, t, desc.value.trim(), xh.value.trim(), tg.value.trim(), web.value.trim(), img.length, img.slice(-64)]);
     if (key !== metaKey || !metaUri) { const m = await api('meta', { name: n, symbol: t, desc: desc.value.trim(), image: img, x: xh.value.trim(), telegram: tg.value.trim(), website: web.value.trim() }); metaUri = m.uri; metaKey = key; }
     step('meta', 'ok', `<a href="${esc(metaUri)}" target="_blank" rel="noopener">${esc(short(metaUri.replace(/^https:\/\//, ''), 14))} ↗</a>`);
