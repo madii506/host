@@ -157,17 +157,14 @@ fetch('/api/pump').then(r => r.json()).then(j => {
   }
 }).catch(() => { const b = $('#trGrid'); if (b) b.innerHTML = '<div class="hempty">Jupiter\'s trending list didn\'t answer. Refresh in a moment.</div>'; });
 
-// 01, measured: how many tokens share the hottest ticker on pump.fun this hour
+// 01, measured: of this hour's hottest tickers on pump.fun, the one shared by the most tokens
 async function pvpLive() {
-  const syms = [...new Set((PUMP.trending || []).map(c => c.symbol).filter(Boolean))].slice(0, 6);
-  for (const sy of syms) {
-    try {
-      const j = await fetch('/api/copies?symbol=' + encodeURIComponent(sy)).then(r => r.json());
-      if (!j.ok || j.count < 3) continue;
-      const top = j.coins[0];
-      $('#plText').innerHTML = `Jupiter lists <b>${j.count}${j.capped ? '+' : ''} tokens called $${esc(j.symbol)}</b>, one of this hour's hottest tickers on pump.fun.${top && top.mcap ? ` The biggest is worth ${usdK(top.mcap)}.` : ''} Each one competes with the rest for the same buyers. On host, they could all launch inside the first.`;
-      $('#plRow').innerHTML = j.coins.map((c, i) => `<span class="plc${i === 0 ? ' top' : ''}" title="${esc(c.name || '')}"><span class="ic">${ico(c.icon, j.symbol)}</span>${usdK(c.mcap)}</span>`).join('');
-      $('#pvpLive').hidden = false; return;
-    } catch { /* try the next ticker */ }
-  }
+  const syms = [...new Set((PUMP.trending || []).map(c => c.symbol).filter(Boolean))].slice(0, 8);
+  const res = await Promise.all(syms.map(sy => fetch('/api/copies?symbol=' + encodeURIComponent(sy)).then(r => r.json()).catch(() => null)));
+  const j = res.filter(x => x && x.ok && x.count >= 3).sort((a, b) => b.count - a.count)[0];
+  if (!j) return;
+  const top = j.coins[0];
+  $('#plText').innerHTML = `Jupiter lists <b>${j.capped ? 'at least ' : ''}${j.count} tokens called $${esc(j.symbol)}</b>, one of this hour's hottest tickers on pump.fun.${top && top.mcap ? ` The biggest is worth ${usdK(top.mcap)}.` : ''} Each one competes with the rest for the same buyers. On host, they could all launch inside the first.`;
+  $('#plRow').innerHTML = j.coins.map((c, i) => `<span class="plc${i === 0 ? ' top' : ''}" title="${esc(c.name || '')}"><span class="ic">${ico(c.icon, j.symbol)}</span>${usdK(c.mcap)}</span>`).join('');
+  $('#pvpLive').hidden = false;
 }
