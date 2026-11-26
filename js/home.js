@@ -71,7 +71,8 @@ fetch('/api/hosts').then(r => r.json()).then(j => {
   if (j.maxDepth) { put('#stDepth', j.maxDepth); const w = WORD[j.maxDepth] || j.maxDepth; $('#depthN').textContent = w; $('#depthN2').textContent = w; $$('.depthN3').forEach(e => (e.textContent = w)); }
   renderHosts();
   const pick = ['ETH', 'WBTC', 'PUMP', '$WIF', 'Bonk', 'TRUMP'];
-  const top = HOSTS.filter(h => h.usd).sort((a, b) => (pick.indexOf(b.symbol) >= 0) - (pick.indexOf(a.symbol) >= 0) || (b.liq || 0) - (a.liq || 0));
+  const rank = h => { const i = pick.indexOf(h.symbol); return i < 0 ? 99 : i; };
+  const top = HOSTS.filter(h => h.usd).sort((a, b) => rank(a) - rank(b) || (b.liq || 0) - (a.liq || 0));
   cHost.innerHTML = top.map(h => `<option value="${esc(h.mint)}">${esc(h.symbol)} · ${esc(h.name || '')}</option>`).join('');
   calc();
 }).catch(() => { grid.innerHTML = '<div class="hempty">pump.fun\'s host list didn\'t load. Refresh in a moment.</div>'; cHost.innerHTML = '<option value="">Hosts didn\'t load</option>'; });
