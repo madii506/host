@@ -104,7 +104,7 @@ async function check(mintS) {
   let r; try { r = await sdk().resolveQuoteMint(mint); } catch (e) { return { ok: true, can: false, mint: mintS, error: why(e) }; }
   const g = await global().catch(() => null);
   const meta = (await jup([mintS]))[mintS] || {};
-  return { ok: true, can: true, mint: mintS, source: r.source, decimals: r.decimals, program: r.quoteTokenProgram.toBase58(), depth: r.pumpQuote ? r.pumpQuote.depth : 1, maxDepth: g ? Number(g.maxCurveDepth || 0) : null, symbol: meta.symbol || null, name: meta.name || null, icon: meta.icon || null, usd: meta.usdPrice ?? null };
+  return { ok: true, can: true, mint: mintS, source: r.source, decimals: r.decimals, program: r.quoteTokenProgram.toBase58(), depth: r.pumpQuote ? r.pumpQuote.depth : 0, maxDepth: g ? Number(g.maxCurveDepth || 0) : null, symbol: meta.symbol || null, name: meta.name || null, icon: meta.icon || null, usd: meta.usdPrice ?? null };
 }
 async function balance(walletS, mintS) {
   const wallet = pk(walletS), mint = pk(mintS);
@@ -184,7 +184,7 @@ async function build(req) {
   const used = sim.value.unitsConsumed || 300000, units = Math.min(1400000, Math.ceil(used * 1.15) + 20000);
   tx = compile(units, memo);
   const post = sim.value.accounts && sim.value.accounts[0] ? sim.value.accounts[0].lamports : null;
-  return { ok: true, tx: Buffer.from(tx.serialize()).toString('base64'), mint: mint.toBase58(), host: host.toBase58(), source: rq.source, depth: rq.pumpQuote ? rq.pumpQuote.depth : 1, lastValid: lastValidBlockHeight, units, bytes: tx.serialize().length, memo, tokens, cost: bal != null && post != null ? Math.max(0, (bal - post) / 1e9) : null, ...(dry && { dry: true, logs, used }) };
+  return { ok: true, tx: Buffer.from(tx.serialize()).toString('base64'), mint: mint.toBase58(), host: host.toBase58(), source: rq.source, depth: rq.pumpQuote ? rq.pumpQuote.depth : 0, lastValid: lastValidBlockHeight, units, bytes: tx.serialize().length, memo, tokens, cost: bal != null && post != null ? Math.max(0, (bal - post) / 1e9) : null, ...(dry && { dry: true, logs, used }) };
 }
 
 // ---------- send: only host launches, to every RPC at once
