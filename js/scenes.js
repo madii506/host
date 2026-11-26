@@ -77,7 +77,7 @@ export function pixCoin(c, cx, cy, r, label, tone = 'vi') {
     const x = i - PM, z = PM - j, lit = 1.06 - (x - z) * 0.014;
     c.fillStyle = shade(P[t], lit); c.fillRect(x0 + i * s, y0 + j * s, s - gap + 0.4, s - gap + 0.4);
   }
-  if (label) { c.fillStyle = tone === 'gold' ? '#2a1a04' : '#f3f0fb'; c.font = `700 ${Math.max(9, r * 0.34)}px Pix, monospace`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(label, cx, cy + 1); c.textBaseline = 'alphabetic'; }
+  if (label) { c.fillStyle = tone === 'gold' ? '#2a1a04' : '#f3f0fb'; c.font = `700 ${Math.max(9, r * (label.length > 5 ? 0.25 : label.length > 4 ? 0.29 : 0.34))}px Pix, monospace`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(label, cx, cy + 1); c.textBaseline = 'alphabetic'; }
 }
 
 // ---------- the zoom: SOL -> the host -> your coin -> the next one

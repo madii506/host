@@ -186,8 +186,8 @@ whileVisible(nest, t => {
     const a = pts[seg], b = pts[seg + 1], x = a[0] + r + (b[0] - a[0] - 2 * r) * q, y = a[1] + Math.sin(q * Math.PI) * -H * 0.06;
     c.fillStyle = seg ? C.vi2 : C.sol; c.globalAlpha = Math.sin(q * Math.PI); c.fillRect(Math.round(x) - 3, Math.round(y) - 3, 6, 6); c.globalAlpha = 1;
   }
-  const hl = host ? (host.symbol || '?').replace(/^\$/, '').slice(0, 5).toUpperCase() : '?';
-  const yl = (T() || 'YOU').slice(0, 5);
+  const hl = host ? (host.symbol || '?').replace(/^\$/, '').slice(0, 6).toUpperCase() : '?';
+  const yl = (T() || 'YOU').slice(0, 6);
   pixCoin(c, pts[0][0], pts[0][1], r * 0.82, 'SOL', 'sol');
   pixCoin(c, pts[1][0], pts[1][1], r * (1 + Math.sin(t * 2) * 0.015), hl, 'vi');
   pixCoin(c, pts[2][0], pts[2][1], r * 0.9, yl, 'gold');
