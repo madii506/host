@@ -64,6 +64,22 @@ export function drawCoin(c, cx, cy, s, W, H, light = true) {
 // the door's inside, as a full screen
 export function insideFull(c, W, H) { inside(c, 0, 0, W, H, 1); }
 
+
+// ---------- a plain pixel coin with a label (no door): used for the host, the guests and the chain
+const PN = 21, PM = 10;
+const PMAP = (() => { const m = []; for (let j = 0; j < PN; j++) { const row = []; for (let i = 0; i < PN; i++) { const x = i - PM, z = PM - j, d = Math.hypot(x, z); row.push(d > PM + 0.3 ? null : d >= PM - 1.6 ? 'R' : (d >= 6.2 && d <= 7.2) ? 'I' : 'F'); } m.push(row); } return m; })();
+export function pixCoin(c, cx, cy, r, label, tone = 'vi') {
+  const s = (2 * r) / PN, x0 = cx - r, y0 = cy - r;
+  const P = tone === 'gold' ? { R: '#ffd98f', F: '#b8741a', I: '#ffc45a' } : tone === 'sol' ? { R: '#bfe6ff', F: '#1d3a55', I: '#7cc8ff' } : { R: '#c7b9ff', F: '#3a2c8a', I: '#8c78ff' };
+  const gap = s > 5 ? Math.max(0.6, s * 0.08) : 0;
+  for (let j = 0; j < PN; j++) for (let i = 0; i < PN; i++) {
+    const t = PMAP[j][i]; if (!t) continue;
+    const x = i - PM, z = PM - j, lit = 1.06 - (x - z) * 0.014;
+    c.fillStyle = shade(P[t], lit); c.fillRect(x0 + i * s, y0 + j * s, s - gap + 0.4, s - gap + 0.4);
+  }
+  if (label) { c.fillStyle = tone === 'gold' ? '#2a1a04' : '#f3f0fb'; c.font = `700 ${Math.max(9, r * 0.34)}px Pix, monospace`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(label, cx, cy + 1); c.textBaseline = 'alphabetic'; }
+}
+
 // ---------- the zoom: SOL -> the host -> your coin -> the next one
 export function zoom(cv) {
   let P = 0;
@@ -115,8 +131,8 @@ export function pvp(cv, getSplit) {
     // the right: on host, the copies live inside the original and feed it
     c.save(); c.beginPath(); c.rect(split, 0, W - split, H); c.clip();
     c.fillStyle = '#120f1d'; c.fillRect(0, 0, W, H);
-    const hx = W * 0.74, hy = H * 0.5, s = Math.min(W, H) * 0.42 / N;
-    drawCoin(c, hx, hy, s, W, H);
+    const hx = W * 0.74, hy = H * 0.5;
+    pixCoin(c, hx, hy, Math.min(W, H) * 0.19, 'HOST');
     c.font = `700 ${Math.max(11, W * 0.012)}px Pix, monospace`; c.textAlign = 'center'; c.fillStyle = C.gold2;
     if (W > 620) c.fillText('ONE HOST, FOURTEEN GUESTS', hx, H * 0.1);
     guests.forEach((g, k) => {
@@ -147,10 +163,9 @@ export function flow(cv) {
     c.strokeStyle = C.line; c.lineWidth = Math.max(10, H * 0.06); c.lineCap = 'round';
     c.beginPath(); c.moveTo(ax, y); c.lineTo(cx, y); c.stroke();
     // SOL
-    c.fillStyle = '#0f1a24'; c.strokeStyle = C.sol; c.lineWidth = 3; c.beginPath(); c.arc(ax, y, H * 0.17, 0, 6.283); c.fill(); c.stroke();
-    c.fillStyle = C.sol; c.font = `700 ${Math.max(12, H * 0.07)}px Pix, monospace`; c.textAlign = 'center'; c.fillText('SOL', ax, y + H * 0.025);
+    pixCoin(c, ax, y, Math.min(H * 0.17, W * 0.07), 'SOL', 'sol');
     // the host
-    drawCoin(c, bx, y + 0.4 * s, s, W, H);
+    pixCoin(c, bx, y, Math.min(H * 0.24, W * 0.1), 'HOST');
     // your coin: a vessel that fills with host
     const vw = H * 0.34, vh = H * 0.5, vx = cx - vw / 2, vy = y - vh / 2, fill = 0.25 + 0.55 * ((t * 0.05) % 1);
     c.fillStyle = '#16121f'; c.strokeStyle = C.gold; c.lineWidth = 2.5; c.beginPath(); c.roundRect(vx, vy, vw, vh, 14); c.fill(); c.stroke();
@@ -160,11 +175,11 @@ export function flow(cv) {
     for (let k = 0; k <= 20; k++) c.lineTo(vx + (k / 20) * vw, fy + Math.sin(t * 3 + k * 0.7) * 3);
     c.lineTo(vx + vw, vy + vh); c.lineTo(vx, vy + vh); c.fill(); c.restore();
     c.fillStyle = C.gold2; c.font = `700 ${Math.max(11, H * 0.05)}px Pix, monospace`; c.fillText('YOUR CURVE', cx, vy - 12);
-    c.fillStyle = C.vi2; c.fillText('THE HOST', bx, y - 13.2 * s);
+    c.fillStyle = C.vi2; c.fillText('THE HOST', bx, y - Math.min(H * 0.24, W * 0.1) - 12);
     // the particles: SOL blue until the host, host violet after
     parts.forEach(p => {
       const u = (t * 0.11 * p.sp + p.ph) % 1, x = ax + (cx - vw * 0.5 - ax) * u, yy = y + p.y * H * 0.035;
-      if (x > bx - 9 * s && x < bx + 9 * s) return;   // inside the host
+      if (Math.abs(x - bx) < Math.min(H * 0.24, W * 0.1)) return;   // inside the host
       c.fillStyle = x < bx ? C.sol : C.vi; c.beginPath(); c.arc(x, yy, Math.max(2.5, H * 0.012), 0, 6.283); c.fill();
     });
     c.fillStyle = C.dim; c.font = `600 ${Math.max(10, H * 0.04)}px JB, monospace`;
@@ -186,15 +201,14 @@ export function depthChain(cv, onLevel) {
     for (let i = 0; i < L; i++) {
       const y = top + step * i, lit = i <= at ? 1 - Math.min(1, (at - i) * 0.25) : 0;
       if (i === 0) {
-        c.fillStyle = '#0f1a24'; c.strokeStyle = C.sol; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, step * 0.27, 0, 6.283); c.fill(); c.stroke();
-        c.fillStyle = C.sol; c.font = `700 ${Math.max(11, step * 0.14)}px Pix, monospace`; c.textAlign = 'center'; c.fillText('SOL', x, y + 4);
+        pixCoin(c, x, y, step * 0.27, 'SOL', 'sol');
       } else {
-        const s = (step * 0.58) / N * (1 - i * 0.06);
-        if (lit > 0) { c.fillStyle = `rgba(255,180,58,${0.25 * lit})`; c.beginPath(); c.arc(x, y, s * 16, 0, 6.283); c.fill(); }
-        drawCoin(c, x, y + 0.4 * s, s, W, H);
+        const r = step * 0.3 * (1 - i * 0.07);
+        if (lit > 0) { c.fillStyle = `rgba(255,180,58,${0.22 * lit})`; c.beginPath(); c.arc(x, y, r * 1.35, 0, 6.283); c.fill(); }
+        pixCoin(c, x, y, r, ['', 'D0', 'D1', 'YOU', 'D3'][i], i === 3 ? 'gold' : 'vi');
       }
-      c.fillStyle = i <= at ? C.gold2 : C.dim; c.font = `700 ${Math.max(11, step * 0.12)}px Pix, monospace`; c.textAlign = 'left';
-      c.fillText('D' + i, x + step * 0.42, y + 5);
+      c.fillStyle = i <= at ? C.gold2 : C.dim; c.font = `700 ${Math.max(11, step * 0.11)}px JB, monospace`; c.textAlign = 'left';
+      c.fillText(['BASE', 'D0', 'D1', 'D2', 'D3'][i] || 'D' + (i - 1), x + step * 0.42, y + 5);
     }
     // the buy
     if (cyc < 1) { const y = top + step * at; c.fillStyle = C.gold; c.beginPath(); c.arc(x - step * 0.42, y, 6, 0, 6.283); c.fill(); c.font = `700 ${Math.max(10, step * 0.1)}px JB, monospace`; c.textAlign = 'right'; c.fillText('A BUY', x - step * 0.5, y + 4); }
