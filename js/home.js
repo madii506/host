@@ -1,5 +1,5 @@
 // The home page: clean sections, live data from pump.fun and Solana, no scroll tricks.
-import './intro.js';
+import './intro.js?v=2';
 import { $, $$, esc, clamp, reduced, short } from './util.js';
 import { pvp, flow, depthChain, background } from './scenes.js';
 
