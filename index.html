@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>host</title>
+<meta name="description" content="Launch inside any coin. Pick a host coin on pump.fun, any pump coin or a listed asset like ETH or BTC, and your coin is priced in it, so every buy feeds the host.">
+<meta name="theme-color" content="#0b0a0f">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/fav-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/fav-64.png">
+<link rel="apple-touch-icon" href="/img/fav-180.png">
+<meta property="og:title" content="host">
+<meta property="og:description" content="Launch inside any coin. Every buy feeds the host. No more PvP.">
+<meta property="og:image" content="https://HOSTDOMAIN/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://HOSTDOMAIN/img/og.jpg">
+<link rel="preload" href="/fonts/pixelify.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/unbounded.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/host.css?v=1">
+<script src="/vendor/lenis.min.js" defer></script>
+<script type="module" src="/js/home.js?v=1"></script>
+</head>
+<body class="home">
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<nav class="dock" id="dock" aria-label="host">
+  <a class="mk" href="#top"><img src="/img/fav-64.png" alt="">host</a>
+  <a href="#pvp">PvP</a><a href="#how">How</a><a href="#flow">Flow</a><a href="#hosts">Hosts</a><a href="#depth">Depth</a><a href="#calc">Calculator</a><a href="#guests">Guests</a><a href="#faq">FAQ</a><a href="/docs">Docs</a>
+  <button class="menu" id="menuBtn" type="button">Menu</button>
+  <a class="go" href="/app">Launch</a>
+</nav>
+
+<aside class="rail" id="rail" aria-label="Depth">
+  <span class="d" id="railD">D0</span>
+  <a href="#pvp" data-s="pvp"><span>PVP</span><i></i></a>
+  <a href="#how" data-s="how"><span>HOW</span><i></i></a>
+  <a href="#flow" data-s="flow"><span>FLOW</span><i></i></a>
+  <a href="#hosts" data-s="hosts"><span>HOSTS</span><i></i></a>
+  <a href="#depth" data-s="depth"><span>DEPTH</span><i></i></a>
+  <a href="#calc" data-s="calc"><span>CALCULATOR</span><i></i></a>
+  <a href="#guests" data-s="guests"><span>GUESTS</span><i></i></a>
+  <a href="#rules" data-s="rules"><span>RULES</span><i></i></a>
+  <a href="#faq" data-s="faq"><span>FAQ</span><i></i></a>
+</aside>
+
+<main>
+  <!-- the first door: scroll and you go inside the coin, then inside the next one -->
+  <section class="zoom" id="top">
+    <div class="zoom-pin">
+      <canvas id="doorCv"></canvas>
+      <div class="float" style="left:7%;top:16%;width:clamp(70px,9vw,130px);--bob:7s" data-par="0.5"><img src="/img/sp-gold.webp" alt=""></div>
+      <div class="float" style="right:8%;top:12%;width:clamp(90px,12vw,170px);--bob:8s;--blur:blur(2px)" data-par="0.7"><img src="/img/sp-planet.webp" alt=""></div>
+      <div class="float" style="left:12%;bottom:18%;width:clamp(60px,7vw,100px);--bob:6s" data-par="0.9"><img src="/img/sp-plusv.webp" alt=""></div>
+      <div class="float" style="right:12%;bottom:22%;width:clamp(80px,10vw,140px);--bob:9s;--blur:blur(1px)" data-par="0.6"><img src="/img/sp-chain.webp" alt=""></div>
+      <div class="float" style="left:30%;top:9%;width:clamp(36px,4vw,56px);--bob:5s" data-par="1.1"><img src="/img/sp-plusi.webp" alt=""></div>
+      <div class="hero-in" id="heroIn">
+        <h1 class="wm" id="wm">host</h1>
+        <p class="hook">Launch inside any coin.</p>
+        <div class="cta"><a class="btn g lg" href="/app">Launch a coin <span class="ar">→</span></a><a class="btn o lg" href="#pvp">Go inside</a></div>
+      </div>
+      <div class="zlabel" id="zlabel">
+        <div data-z="0"><span class="dd">DEPTH 0</span><h2>SOL.</h2><p>Where every coin on pump.fun starts. Bought with SOL, priced in SOL.</p></div>
+        <div data-z="1"><span class="dd">DEPTH 1</span><h2>The host.</h2><p>Any pump coin, or ETH, BTC, SPX6900, even a stock. The coin you launch inside.</p></div>
+        <div data-z="2"><span class="dd">DEPTH 2</span><h2>Your coin.</h2><p>Priced in the host. Every buy of yours goes through it first.</p></div>
+        <div data-z="3"><span class="dd">DEPTH 3</span><h2>The next one.</h2><p>Your coin can host too. pump.fun lets coins sit up to five deep.</p></div>
+      </div>
+      <div class="zhint" id="zhint">SCROLL TO GO INSIDE<i></i></div>
+    </div>
+  </section>
+
+  <div class="marq" aria-hidden="true"><div class="marq-t" id="marq"><span>LAUNCH INSIDE ANY COIN</span><i></i><span>EVERY BUY FEEDS THE HOST</span><i></i><span>NO MORE PVP</span><i></i><span>UP TO FIVE COINS DEEP</span><i></i><span>BUILT ON PUMP.FUN</span><i></i></div></div>
+
+  <!-- D1: PvP -->
+  <section class="sec" id="pvp">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D1</b>THE PROBLEM</p><h2 class="h2 split">Fifty copies. One narrative. <em>Everyone loses.</em></h2>
+        <p class="lead rv">A narrative hits and fifty coins launch with the same name. They split the buyers, the liquidity and the attention. Most die in an hour. That's PvP.</p></div></div>
+      <div class="vs rv" id="vs"><canvas id="vsCv"></canvas><span class="side l">PVP</span><span class="side r">ON HOST</span><div class="knob" id="vsKnob"><b>⇆</b></div></div>
+      <div class="vs-notes rv"><p><b>Without host:</b> every copy is a rival. A buy of one is a sell of the others, and the original bleeds.</p><p><b>On host:</b> the copies launch inside the original. Every buy of a copy buys the original first. The narrative's coin gets fed, not farmed.</p></div>
+    </div>
+  </section>
+
+  <!-- D2: how it works, sideways -->
+  <section class="track-sec" id="how">
+    <div class="track-pin">
+      <div class="wrap" style="margin-bottom:34px"><p class="ey"><b>D2</b>HOW IT WORKS</p><h2 class="h2">Four steps. <em>One door.</em></h2></div>
+      <div class="track" id="track">
+        <div class="step card"><span class="ix">01 · PICK A HOST</span><img src="/img/sp-door.webp" alt=""><h3>Pick the coin you launch inside.</h3><p>Any pump coin, or a listed asset: ETH, BTC, XRP, SUI, SPX6900, PUMP, even stocks like NVDA. Paste a contract and host checks it.</p></div>
+        <div class="step card"><span class="ix">02 · LAUNCH INSIDE</span><img src="/img/sp-gold.webp" alt=""><h3>Your coin is priced in the host.</h3><p>One transaction creates your coin on pump.fun with its curve priced in the host coin, not in SOL. The pair is set for good.</p></div>
+        <div class="step card k"><span class="ix">03 · EVERY BUY FEEDS IT</span><img src="/img/sp-chain.webp" alt=""><h3>Buying yours means buying the host.</h3><p>Buyers pay in the host, or pay SOL and it's swapped into the host on the way in. The host coins sit in your curve.</p></div>
+        <div class="step card"><span class="ix">04 · GRADUATE TOGETHER</span><img src="/img/sp-planet.webp" alt=""><h3>Graduate into a pool with the host.</h3><p>When your curve fills, your coin moves to PumpSwap in a pool paired with the host. Your chart and the host's move together.</p></div>
+      </div>
+      <div class="track-bar"><i id="trackBar"></i></div>
+    </div>
+  </section>
+
+  <!-- D3: the flow -->
+  <section class="sec tint" id="flow">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D3</b>THE FLOW</p><h2 class="h2 split">SOL goes in. <em>The host goes first.</em></h2></div><span class="tagl rv">Illustration</span></div>
+      <div class="card flow rv"><canvas id="flowCv"></canvas>
+        <div class="flow-k"><div><b>1 · YOU PAY</b><span>SOL, or the host coin itself.</span></div><div><b>2 · IT BECOMES THE HOST</b><span>SOL is swapped into the host on the way in.</span></div><div><b>3 · IT BUYS YOUR COIN</b><span>The host coin goes into your curve.</span></div><div><b>4 · IT STAYS THERE</b><span>The host sits in your curve, then in your pool.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D4: hosts, live from pump.fun -->
+  <section class="sec" id="hosts">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D4</b>PICK A HOST</p><h2 class="h2 split">Every coin here <em>can host yours.</em></h2>
+        <p class="lead rv">These are the assets pump.fun lets a new coin be priced in, read live from its program. Plus any pump coin: paste its contract in the app.</p></div><span class="tagl rv" id="hostsTag">Live · read from pump.fun</span></div>
+      <div class="hbar rv"><div class="chips" id="hostCats"><button class="chip on" data-c="all" type="button">All</button><button class="chip" data-c="crypto" type="button">Crypto</button><button class="chip" data-c="meme" type="button">Memes</button><button class="chip" data-c="stock" type="button">Stocks</button></div>
+        <label class="search"><input id="hostQ" placeholder="Search a host: ETH, WIF, NVDA…" aria-label="Search hosts"></label></div>
+      <div class="hgrid" id="hostGrid"><div class="hempty">Reading pump.fun's list of hosts…</div></div>
+      <div class="hmore"><button class="btn o" id="hostMore" type="button" hidden>Show more</button></div>
+    </div>
+  </section>
+
+  <div class="marq gold" aria-hidden="true"><div class="marq-t" id="marq2"><span>ETH</span><i></i><span>BTC</span><i></i><span>SPX6900</span><i></i><span>WIF</span><i></i><span>BONK</span><i></i><span>PUMP</span><i></i><span>XRP</span><i></i><span>SUI</span><i></i><span>ANY PUMP COIN</span><i></i></div></div>
+
+  <!-- D5: depth -->
+  <section class="sec tint" id="depth">
+    <div class="wrap depth">
+      <div><p class="ey"><b>D5</b>DEPTH</p><h2 class="h2 split">Coins inside coins, <em>five deep.</em></h2>
+        <p class="lead rv">A coin launched inside a pump coin can host a coin of its own. pump.fun allows a chain five coins deep. A buy at the bottom moves every coin above it.</p>
+        <div class="dl" id="depthList">
+          <div data-d="0"><b>D0</b><span><strong>SOL.</strong> Where the money comes in.</span></div>
+          <div data-d="1"><b>D1</b><span><strong>A pump coin.</strong> The first host.</span></div>
+          <div data-d="2"><b>D2</b><span><strong>A coin inside it.</strong> Priced in D1.</span></div>
+          <div data-d="3"><b>D3</b><span><strong>Yours.</strong> Priced in D2.</span></div>
+          <div data-d="4"><b>D4</b><span><strong>The next one.</strong> Priced in yours.</span></div>
+        </div></div>
+      <div class="card rv" style="padding:18px"><canvas id="depthCv"></canvas></div>
+    </div>
+  </section>
+
+  <!-- D6: calculator -->
+  <section class="sec" id="calc">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D6</b>WHAT YOUR LAUNCH FEEDS</p><h2 class="h2 split">Your buyers <em>buy the host.</em></h2></div><span class="tagl rv">Live prices</span></div>
+      <div class="card calc rv">
+        <div class="in">
+          <label class="fld"><span>The host</span><select id="cHost"><option value="">Loading hosts…</option></select></label>
+          <label class="fld"><span>SOL your buyers put in <b class="num" id="cSolV">25 SOL</b></span><input id="cSol" type="range" min="1" max="200" step="1" value="25"></label>
+          <p class="note">pump.fun curves raise about 85 SOL worth of the quote to graduate. A coin inside a host raises it in the host.</p>
+        </div>
+        <div class="out">
+          <span class="tagl">Host coins bought on the way in</span>
+          <div class="big num" id="cOut">—<small id="cOutS">Pick a host.</small></div>
+          <div class="kv" id="cKv"><div><span>Host price</span><b id="cPx">—</b></div><div><span>SOL in</span><b id="cIn">—</b></div><div><span>Held by your curve</span><b id="cHeld">—</b></div></div>
+          <p class="note">Before pump.fun's trading fees and price impact. Prices from Jupiter.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D7: guests, live -->
+  <section class="sec tint" id="guests">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D7</b>GUESTS</p><h2 class="h2 split">Coins launched <em>inside other coins.</em></h2></div><span class="tagl rv">Live · read from Solana</span></div>
+      <div class="guests" id="guestList"><div class="gempty"><b>Reading the chain…</b></div></div>
+    </div>
+  </section>
+
+  <!-- D8: rules -->
+  <section class="sec" id="rules">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D8</b>THE RULES</p><h2 class="h2 split">Three rules. <em>Every coin.</em></h2></div></div>
+      <div class="rules">
+        <div class="rule card rv"><span class="ix">1</span><img src="/img/sp-doorf.webp" alt=""><b>One host, for good.</b><p>Your coin is priced in the host you pick. The pair can't change after launch.</p></div>
+        <div class="rule card rv d1"><span class="ix">2</span><img src="/img/sp-chain.webp" alt=""><b>Every buy goes through the host.</b><p>Buyers pay in the host, or their SOL is swapped into it first. The host sits in your curve.</p></div>
+        <div class="rule card rv d2"><span class="ix">3</span><img src="/img/sp-planet.webp" alt=""><b>Graduate next to the host.</b><p>A full curve moves to PumpSwap in a pool paired with the host coin.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D9: laps -->
+  <section class="sec tint" id="laps">
+    <div class="wrap">
+      <div class="head"><div><p class="ey"><b>D9</b>LAPS</p><h2 class="h2 split">Built in the open, <em>lap by lap.</em></h2></div></div>
+      <div class="laps">
+        <div class="lap on rv"><span class="w">LAP 1 · LIVE</span><b>The host list</b><p>Every asset pump.fun allows as a host, live, plus a checker for any pump coin.</p></div>
+        <div class="lap on rv d1"><span class="w">LAP 2 · LIVE</span><b>Launch inside</b><p>Launch on pump.fun priced in any host, with your first buy in the same transaction.</p></div>
+        <div class="lap rv d2"><span class="w">LAP 3</span><b>One-click SOL</b><p>Pay SOL for a first buy in any host, swapped on the way in.</p></div>
+        <div class="lap rv d3"><span class="w">LAP 4</span><b>$HOST</b><p>The coin of the launchpad, launched inside a host of its own.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D10: faq -->
+  <section class="sec" id="faq">
+    <div class="wrap faq">
+      <div><p class="ey"><b>D10</b>QUESTIONS</p><h2 class="h2 split">Before you <em>go inside.</em></h2></div>
+      <div>
+        <details class="qa"><summary>What is host?</summary><p>A launchpad for pump.fun coins that are priced inside another coin. Pick a host, launch inside it, and every buy of your coin goes through the host first.</p></details>
+        <details class="qa"><summary>Which coins can be a host?</summary><p>Any pump coin, and every asset on pump.fun's quote list: crypto like ETH, BTC, XRP, SUI and SPX6900 through their Solana versions, big memes like WIF and BONK, and tokenized stocks. BNB coins aren't on the list yet.</p></details>
+        <details class="qa"><summary>How does it end PvP?</summary><p>A copy launched inside the original isn't its rival. Every buy of the copy buys the original first, so the coin that started the narrative gets fed by every coin that follows it.</p></details>
+        <details class="qa"><summary>How do people buy my coin?</summary><p>On pump.fun, with the host coin, or with SOL that gets swapped into the host on the way in. Your coin page has a link straight to it.</p></details>
+        <details class="qa"><summary>Can I change the host later?</summary><p>No. The host is part of your coin's curve from the first block, and it's what your coin pairs with when it graduates.</p></details>
+        <details class="qa"><summary>How deep can coins go?</summary><p>Five. A coin inside a pump coin can host a coin of its own, and so on, up to pump.fun's limit of five.</p></details>
+        <details class="qa"><summary>What does it cost?</summary><p>host takes nothing. A launch costs a little SOL for the new accounts and network fees, plus your first buy if you make one. pump.fun's trading fees apply as on any pump coin.</p></details>
+        <details class="qa"><summary>Is this pump.fun?</summary><p>host is built on pump.fun's own program and launches real pump.fun coins. It isn't run by pump.fun.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" id="final">
+    <img class="door" src="/img/sp-doorf.webp" alt="">
+    <h2 class="split">Every coin <em>can host another.</em></h2>
+    <div class="cta"><a class="btn g lg" href="/app">Launch inside a coin <span class="ar">→</span></a><a class="btn o lg" href="/docs">Read the docs</a></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+</body>
+</html>
