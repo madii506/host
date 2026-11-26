@@ -3,7 +3,7 @@
 //   GET  /api/hosts                  every asset pump.fun lets a coin be priced in, with names, icons and prices
 //   GET  /api/check?mint=            can this coin host? (any pump coin, or a listed asset)
 //   GET  /api/balance?wallet=&mint=  how much of the host a wallet holds, for the first buy
-//   POST /api/meta                   upload the coin's image and metadata to IPFS through pump.fun
+//   POST /api/meta                   store the coin's image and metadata (pump.fun's IPFS when it answers, else host's storage)
 //   POST /api/build                  one transaction: create the coin priced in the host, plus an optional first buy in the host
 //   POST /api/send   GET /api/status the signed launch, broadcast and watched
 //   GET  /api/list                   every coin launched through host, read from the chain
@@ -242,21 +242,32 @@ async function list() {
     const txs = await conn.getParsedTransactions(sigs.slice(i, i + 50).map(s => s.signature), { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).catch(() => []);
     txs.forEach((t, k) => {
       if (!t || !t.meta || t.meta.err) return;
-      const keys = t.transaction.message.accountKeys.map(x => x.pubkey.toBase58()); if (!keys.includes(PUMP58)) return;
+      const ak = t.transaction.message.accountKeys, keys = ak.map(x => x.pubkey.toBase58()); if (!keys.includes(PUMP58)) return;
       const m = ((t.meta.logMessages) || []).map(l => /"host:([1-9A-HJ-NP-Za-km-z]{32,44}):([1-9A-HJ-NP-Za-km-z]{32,44})"/.exec(l)).find(Boolean);
-      if (m) coins.push({ mint: m[1], host: m[2], sig: sigs[i + k].signature, time: t.blockTime || null, creator: keys[0] });
+      let mint = m && m[1], host = m && m[2];
+      if (!m) {
+        // a launch too big for the memo: the new coin is the second signer, and the host is the other mint the launch touched
+        mint = ak.filter(x => x.signer).map(x => x.pubkey.toBase58())[1];
+        host = [...new Set([...(t.meta.postTokenBalances || []), ...(t.meta.preTokenBalances || [])].map(b => b.mint))].find(x => x && x !== mint && x !== SOL58);
+      }
+      if (mint) coins.push({ mint, host: host || null, sig: sigs[i + k].signature, time: t.blockTime || null, creator: keys[0] });
     });
   }
-  const top = coins.slice(0, 60);
+  let top = coins.slice(0, 60);
   if (top.length) {
-    const [meta, g, curves] = await Promise.all([jup([...new Set(top.flatMap(c => [c.mint, c.host]))]), global().catch(() => null), conn.getMultipleAccountsInfo(top.map(c => P.bondingCurvePda(c.mint))).catch(() => [])]);
+    const [g, curves] = await Promise.all([global().catch(() => null), conn.getMultipleAccountsInfo(top.map(c => P.bondingCurvePda(c.mint))).catch(() => [])]);
     top.forEach((c, i) => {
-      const t = meta[c.mint] || {}, h = meta[c.host] || {};
-      Object.assign(c, { symbol: t.symbol || null, name: t.name || null, image: t.icon || null, hostSymbol: h.symbol || null, hostIcon: h.icon || null });
-      try { const bc = curves[i] && P.PUMP_SDK.decodeBondingCurve(curves[i]); if (bc && g) { const init = Number(g.initialRealTokenReserves.toString()), real = Number(bc.realTokenReserves.toString()); c.curve = bc.complete ? 100 : Math.max(0, Math.min(100, (1 - real / init) * 100)); c.complete = !!bc.complete; } } catch { }
+      try {
+        const bc = curves[i] && P.PUMP_SDK.decodeBondingCurve(curves[i]); if (!bc) return;
+        if (bc.quoteMint) c.host = bc.quoteMint.toBase58();   // the curve itself says what it's priced in
+        if (g) { const init = Number(g.initialRealTokenReserves.toString()), real = Number(bc.realTokenReserves.toString()); c.curve = bc.complete ? 100 : Math.max(0, Math.min(100, (1 - real / init) * 100)); c.complete = !!bc.complete; }
+      } catch { }
     });
+    top = top.filter(c => c.host);
+    const meta = await jup([...new Set(top.flatMap(c => [c.mint, c.host]))]);
+    top.forEach(c => { const t = meta[c.mint] || {}, h = meta[c.host] || {}; Object.assign(c, { symbol: t.symbol || null, name: t.name || null, image: t.icon || null, hostSymbol: h.symbol || null, hostIcon: h.icon || null }); });
   }
-  const v = { ok: true, tag: TAG58, count: coins.length, coins: top };
+  const v = { ok: true, tag: TAG58, count: Math.max(top.length, coins.filter(c => c.host).length), coins: top };
   listCache = { t: Date.now(), v }; return v;
 }
 
