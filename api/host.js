@@ -8,6 +8,7 @@
 //   POST /api/buy                    the creator's first buy, paid in the host, right after the launch
 //   POST /api/send   GET /api/status the signed launch, broadcast and watched
 //   GET  /api/list                   every coin launched through host, read from the chain
+//   GET  /api/pump                   pump coins trending on Jupiter right now, and the newest ones
 'use strict';
 const { Connection, PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction, ComputeBudgetProgram } = require('@solana/web3.js');
 const BN = require('bn.js');
@@ -85,10 +86,24 @@ async function hosts() {
   const qc = await sdk().fetchQuoteControl();
   const mints = ((qc && qc.mints) || []).map(m => (m.mint || m).toBase58());
   const [meta, g] = await Promise.all([jup([...mints, SOL58]), global().catch(() => null)]);
-  const list = mints.map(m => { const t = meta[m] || {}; return { mint: m, symbol: t.symbol || null, name: t.name || null, icon: t.icon || null, usd: t.usdPrice ?? null, liq: Math.round(t.liquidity || 0), cat: cat(t) }; })
+  const list = mints.map(m => { const t = meta[m] || {}; return { mint: m, symbol: t.symbol || null, name: t.name || null, icon: t.icon || null, usd: t.usdPrice ?? null, liq: Math.round(t.liquidity || 0), ch24h: t.stats24h && t.stats24h.priceChange != null ? +t.stats24h.priceChange.toFixed(2) : null, cat: cat(t) }; })
     .sort((a, b) => (b.liq || 0) - (a.liq || 0));
   const v = { ok: true, count: list.length, maxDepth: g ? Number(g.maxCurveDepth || 0) : null, solUsd: (meta[SOL58] && meta[SOL58].usdPrice) || null, hosts: list };
   hostsCache = { t: Date.now(), v }; return v;
+}
+
+// ---------- pump coins people are trading right now (Jupiter's trending list) and the newest ones: any of them can host
+let pumpCache = null;
+async function pumpBoard() {
+  if (pumpCache && Date.now() - pumpCache.t < 60000) return pumpCache.v;
+  const get = async u => { try { const r = await fetch(u, { signal: AbortSignal.timeout(9000) }); return r.ok ? await r.json() : []; } catch { return []; } };
+  const [tr, rc] = await Promise.all([get('https://lite-api.jup.ag/tokens/v2/toptrending/1h?limit=100'), get('https://lite-api.jup.ag/tokens/v2/recent')]);
+  const isPump = t => t && typeof t.id === 'string' && (/pump$/.test(t.id) || t.launchpad === 'pump.fun');
+  const pc = x => x == null ? null : +Number(x).toFixed(2);
+  const map = t => ({ mint: t.id, symbol: t.symbol || null, name: t.name || null, icon: t.icon || null, usd: t.usdPrice ?? null, mcap: t.mcap ? Math.round(t.mcap) : null, ch1h: pc(t.stats1h && t.stats1h.priceChange), ch24h: pc(t.stats24h && t.stats24h.priceChange), traders1h: (t.stats1h && t.stats1h.numTraders) || null, grad: !!t.graduatedPool, at: t.createdAt || null });
+  const v = { ok: true, trending: (Array.isArray(tr) ? tr : []).filter(isPump).slice(0, 24).map(map), fresh: (Array.isArray(rc) ? rc : []).filter(isPump).slice(0, 12).map(map) };
+  if (v.trending.length || v.fresh.length) pumpCache = { t: Date.now(), v };
+  return v;
 }
 
 // ---------- can this coin host?
@@ -320,6 +335,7 @@ module.exports = async (req, res) => {
     if (p === 'check') { const m = (q.get('mint') || '').trim(); if (!isAddr(m)) return out(res, 400, { ok: false, error: "That isn't a Solana address." }); return out(res, 200, await check(m), 's-maxage=30'); }
     if (p === 'balance') return out(res, 200, await balance(q.get('wallet'), q.get('mint')));
     if (p === 'list') return out(res, 200, await list(), 's-maxage=15, stale-while-revalidate=60');
+    if (p === 'pump') return out(res, 200, await pumpBoard(), 's-maxage=60, stale-while-revalidate=300');
     if (p === 'status') return out(res, 200, await status(q));
     if (req.method === 'POST' && p === 'meta') return out(res, 200, await meta(req));
     if (req.method === 'POST' && p === 'build') return out(res, 200, await build(req));
