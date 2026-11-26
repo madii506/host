@@ -44,7 +44,7 @@
           <ol>
             <li><b>Pick a host.</b> Tap one from pump.fun's list or paste any contract. host asks pump.fun's program whether it can host, and how deep your coin would sit.</li>
             <li><b>Add your coin.</b> An image (cropped square in your browser), a name, a ticker, a description and links.</li>
-            <li><b>Choose a first buy, or none.</b> The first buy is paid in the host coin, from your wallet. host shows how much of the host you hold.</li>
+            <li><b>Choose a first buy, or none.</b> The first buy is paid in the host coin, from your wallet, right after the launch. host shows how much of the host you hold.</li>
             <li><b>Launch.</b> host stores the image and details as your coin's metadata, builds the transaction and tries it against Solana. Your wallet signs, then the page signs for the new coin's address, and the launch is sent.</li>
             <li><b>Live.</b> When Solana confirms, your coin is on pump.fun, priced in the host, and on the guest list.</li>
           </ol>
@@ -57,9 +57,10 @@
           <ul>
             <li><b>Compute budget.</b> The limit is set from a simulation of this exact launch, plus a margin.</li>
             <li><b>create_v2</b> on pump.fun's program, with the host as the quote mint. This makes the coin, its metadata and its curve.</li>
-            <li><b>buy_v2</b>, only if you chose a first buy. It pays in the host from your wallet's host account.</li>
+            
             <li><b>A 0 SOL transfer</b> to host's tag address, plus a memo reading <code>host:&lt;your coin&gt;:&lt;the host&gt;</code> when it fits in the transaction. That's how the guest list finds launches on chain. It moves no money.</li>
           </ul>
+          <p><b>The first buy</b>, if you choose one, is a second transaction sent as soon as the coin is live: <b>buy_v2</b> on your new coin, paid in the host from your wallet. Your wallet signs it too. The two don't fit in one Solana transaction together.</p>
           <p>Two keys sign it: your wallet (it pays) and the new coin's address. That address is a key made in your browser for this launch. It signs once and is never sent anywhere.</p>
           <p>Before your wallet sees anything, host simulates the transaction on Solana mainnet. If it would fail, you get the reason and nothing is sent.</p>
         </section>

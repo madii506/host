@@ -16,7 +16,7 @@
 <meta name="twitter:image" content="https://host-one-sandy.vercel.app/img/og.jpg">
 <link rel="preload" href="/fonts/unbounded.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/host.css?v=4">
-<script type="module" src="/js/app.js?v=4"></script>
+<script type="module" src="/js/app.js?v=5"></script>
 </head>
 <body class="page app">
 <canvas id="bg" aria-hidden="true"></canvas>
@@ -61,7 +61,7 @@
           <div class="pf buyf"><span>Your first buy, paid in the host <b class="num" id="lHold"></b></span>
             <div class="buyrow"><input id="lBuy" type="number" min="0" step="any" inputmode="decimal" placeholder="0" aria-label="First buy, in host coins"><em id="lBuyU">HOST</em><button class="btn o" id="lMax" type="button">Max</button></div></div>
           <ol class="lsteps">
-            <li><b>One transaction.</b> It creates your coin on pump.fun, priced in the host, with your first buy inside it if you make one.</li>
+            <li><b>One transaction.</b> It creates your coin on pump.fun, priced in the host. A first buy, if you make one, follows right after in a second.</li>
             <li><b>Tried first.</b> host runs it against Solana before your wallet sees it. If it would fail, nothing is sent.</li>
             <li><b>Your wallet signs.</b> Then this page signs for the new coin's address, a key made here that never leaves the page.</li>
           </ol>
@@ -73,6 +73,7 @@
             <li data-k="sign"><b>Signed in your wallet</b><small></small></li>
             <li data-k="send"><b>Sent to Solana</b><small></small></li>
             <li data-k="land"><b>Live on pump.fun</b><small></small></li>
+            <li data-k="buy" hidden><b>Your first buy, paid in the host</b><small></small></li>
           </ol>
           <div class="lstatus" id="lStatus" role="status" hidden></div>
         </form>
