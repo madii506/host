@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HOST</title>
+<meta name="description" content="Launch a pump.fun coin inside any coin: pick a host, and your coin is priced in it, so every buy feeds the host.">
+<meta name="theme-color" content="#0b0a0f">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/fav-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/fav-64.png">
+<link rel="apple-touch-icon" href="/img/fav-180.png">
+<meta property="og:title" content="HOST">
+<meta property="og:description" content="Launch inside any coin. Every buy feeds the host.">
+<meta property="og:image" content="https://host-one-sandy.vercel.app/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://host-one-sandy.vercel.app/img/og.jpg">
+<link rel="preload" href="/fonts/unbounded.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/host.css?v=3">
+<script type="module" src="/js/app.js?v=3"></script>
+</head>
+<body class="page app">
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<nav class="dock on" id="dock" aria-label="HOST">
+  <a href="/">Home</a><a href="#launch" data-tab="launch">Launch</a><a href="#guests" data-tab="guests">Guests</a><a href="#check" data-tab="check">Check a coin</a><a href="/docs">Docs</a>
+  <button class="menu" id="menuBtn" type="button">Menu</button>
+  <button class="go wnav" id="wNav" type="button">Connect</button>
+</nav>
+
+<main>
+  <div class="wrap">
+    <div class="pg-head">
+      <h1>Launch inside <em>a coin.</em></h1>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="launch" type="button"><b>01</b>Launch</button>
+      <button class="tab" role="tab" data-tab="guests" type="button"><b>02</b>Guests</button>
+      <button class="tab" role="tab" data-tab="check" type="button"><b>03</b>Check a coin</button>
+    </div>
+
+    <!-- 01 launch -->
+    <section class="panel" data-panel="launch">
+      <div class="launch">
+        <form class="card lform" id="lform" autocomplete="off" novalidate>
+          <div class="hostpick" id="hostPick">
+            <div class="cur" id="hCur"><span class="ic">?</span><div><b>Pick a host</b><span>The coin yours will live inside.</span></div><span class="hstat" id="hStat"></span></div>
+            <div class="opts" id="hOpts"></div>
+            <div class="hpaste"><input id="hIn" placeholder="Or paste any pump coin or listed asset" spellcheck="false" aria-label="A host coin's contract address"><button class="btn o" id="hGo" type="button">Use it</button></div>
+          </div>
+          <label class="drop" id="lDrop"><input type="file" id="lImg" accept="image/png,image/jpeg,image/webp,image/gif"><span class="dz"><b>Add an image</b>Drop it here or tap to choose. It's cropped square in your browser.</span></label>
+          <div class="two">
+            <label class="pf"><span>Name</span><input id="lName" maxlength="32" placeholder="Your coin's name"></label>
+            <label class="pf"><span>Ticker</span><input id="lTick" maxlength="10" placeholder="TICKER"></label>
+          </div>
+          <label class="pf"><span>Description</span><textarea id="lDesc" maxlength="500" rows="3" placeholder="What is it? One or two lines."></textarea></label>
+          <div class="three">
+            <label class="pf"><span>X</span><input id="lX" maxlength="120" placeholder="x.com/…"></label>
+            <label class="pf"><span>Telegram</span><input id="lTg" maxlength="120" placeholder="t.me/…"></label>
+            <label class="pf"><span>Website</span><input id="lWeb" maxlength="120" placeholder="https://…"></label>
+          </div>
+          <div class="pf buyf"><span>Your first buy, paid in the host <b class="num" id="lHold"></b></span>
+            <div class="buyrow"><input id="lBuy" type="number" min="0" step="any" inputmode="decimal" placeholder="0" aria-label="First buy, in host coins"><em id="lBuyU">HOST</em><button class="btn o" id="lMax" type="button">Max</button></div></div>
+          <ol class="lsteps">
+            <li><b>One transaction.</b> It creates your coin on pump.fun, priced in the host, with your first buy inside it if you make one.</li>
+            <li><b>Tried first.</b> host runs it against Solana before your wallet sees it. If it would fail, nothing is sent.</li>
+            <li><b>Your wallet signs.</b> Then this page signs for the new coin's address, a key made here that never leaves the page.</li>
+          </ol>
+          <p class="lcost" id="lCost"></p>
+          <div class="prow"><button class="btn g lg" type="submit" id="lGo">Launch <span class="ar">→</span></button><a class="btn o" id="lPost" target="_blank" rel="noopener">Post on X</a><button class="btn o" id="lReset" type="button">Clear</button></div>
+          <ol class="lflow" id="lFlow" hidden>
+            <li data-k="meta"><b>Image and details uploaded to IPFS</b><small></small></li>
+            <li data-k="build"><b>Launch built and tried against Solana</b><small></small></li>
+            <li data-k="sign"><b>Signed in your wallet</b><small></small></li>
+            <li data-k="send"><b>Sent to Solana</b><small></small></li>
+            <li data-k="land"><b>Live on pump.fun</b><small></small></li>
+          </ol>
+          <div class="lstatus" id="lStatus" role="status" hidden></div>
+        </form>
+        <div class="lprev">
+          <div class="nest"><canvas id="nestCv"></canvas><div class="cap"><span id="nestL">SOL → THE HOST → YOU</span><b id="nestR">—</b></div></div>
+          <div class="ccard">
+            <div class="cpic" id="cPic"><span>?</span></div>
+            <div class="cmeta"><b id="cTick">$TICKER</b><span id="cName">Your coin</span></div>
+            <p id="cDesc">Your description shows here.</p>
+            <div class="cchips"><span class="g" id="cIn">INSIDE · PICK A HOST</span><span id="cDepth">DEPTH —</span><span>PUMP.FUN</span></div>
+          </div>
+          <div class="ldone" id="lDone" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 guests -->
+    <section class="panel" data-panel="guests" hidden>
+      <div class="ph"><div><h2>Guests</h2><p>Every coin launched through host, read from Solana, with the coin it lives in.</p></div><span class="tagl" id="gCount">Read from Solana</span></div>
+      <div class="guests" id="guestList"><div class="gempty"><b>Reading the chain…</b></div></div>
+    </section>
+
+    <!-- 03 check -->
+    <section class="panel" data-panel="check" hidden>
+      <div class="ph"><div><h2>Check a coin</h2><p>Paste any contract. host asks pump.fun's program whether a new coin can be priced in it, and how deep it would sit.</p></div></div>
+      <div class="card checker">
+        <form id="ckForm" autocomplete="off"><label class="search big"><input id="ckIn" placeholder="Paste a coin's contract address" spellcheck="false" aria-label="A coin's contract address"></label><button class="btn g lg" type="submit">Check <span class="ar">→</span></button></form>
+        <div class="ckout" id="ckOut"><div class="ckempty"><span>WHAT YOU'LL SEE</span><p>Whether the coin can host, where it comes from (a pump coin, or pump.fun's list), how deep your coin would sit, and its live price.</p></div></div>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="wmodal" id="wModal" hidden><div class="wbox" role="dialog" aria-modal="true" aria-labelledby="wTitle"><div class="whead"><b id="wTitle">Connect a wallet</b><button class="wx" id="wClose" type="button" aria-label="Close">✕</button></div><div class="wlist" id="wList"></div><p class="wnote">host asks your wallet for one thing: to sign the launch you build. It never asks for your recovery phrase.</p></div></div>
+<div class="toast" id="toast" role="status"></div>
+</body>
+</html>
