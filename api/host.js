@@ -5,6 +5,7 @@
 //   GET  /api/balance?wallet=&mint=  how much of the host a wallet holds, for the first buy
 //   POST /api/meta                   store the coin's image and metadata (pump.fun's IPFS when it answers, else host's storage)
 //   POST /api/build                  one transaction: create the coin priced in the host, plus an optional first buy in the host
+//   POST /api/buy                    the creator's first buy, paid in the host, right after the launch
 //   POST /api/send   GET /api/status the signed launch, broadcast and watched
 //   GET  /api/list                   every coin launched through host, read from the chain
 'use strict';
@@ -37,6 +38,7 @@ const TAG = new PublicKey(process.env.HOST_TAG || 'EuU8Xw9aYnHUAeDkv1CshvmnSXLpP
 const MEMO = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 const TAG58 = TAG.toBase58(), SOL58 = 'So11111111111111111111111111111111111111112';
 const CU_PRICE = +process.env.HOST_CU_PRICE || 400000;
+const SITE = process.env.HOST_SITE || 'https://host-one-sandy.vercel.app';
 
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58(bytes) { let n = 0n; for (const x of bytes) n = n * 256n + BigInt(x); let s = ''; while (n > 0n) { s = B58[Number(n % 58n)] + s; n /= 58n; } for (const x of bytes) { if (x === 0) s = '1' + s; else break; } return s; }
@@ -131,12 +133,13 @@ async function pumpIpfs({ buf, type, ext, name, symbol, desc, x, tg, web }) {
 }
 async function ownStore({ buf, type, ext, name, symbol, desc, x, tg, web }) {
   if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('no storage connected');
-  const id = require('crypto').createHash('sha256').update(buf).update(name + '|' + symbol + '|' + desc + '|' + x + '|' + tg + '|' + web).digest('hex').slice(0, 24);
+  const id = require('crypto').createHash('sha256').update(buf).update(name + '|' + symbol + '|' + desc + '|' + x + '|' + tg + '|' + web).digest('hex').slice(0, 12);
   const put = (path, data, contentType) => blob().put('host/' + path, data, { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType, cacheControlMaxAge: 31536000 }).then(r => r.url);
   const image = await put(`i/${id}.${ext}`, buf, type);
   const json = { name, symbol, description: desc, image, showName: true, createdOn: 'https://host-one-sandy.vercel.app', ...(x && { twitter: x }), ...(tg && { telegram: tg }), ...(web && { website: web }) };
-  const uri = await put(`m/${id}.json`, JSON.stringify(json), 'application/json');
-  return { uri, image, via: 'host' };
+  const stored = await put(`m/${id}.json`, JSON.stringify(json), 'application/json');
+  // the coin carries a short link (it has to fit in the launch transaction); host's domain serves the stored file behind it
+  return { uri: SITE + '/m/' + id, stored, image, via: 'host' };
 }
 async function meta(req) {
   const b = await body(req);
@@ -187,9 +190,10 @@ async function build(req) {
   const tag = [new TransactionInstruction({ programId: MEMO, keys: [], data: Buffer.from(`host:${mint.toBase58()}:${host.toBase58()}`) }), SystemProgram.transfer({ fromPubkey: wallet, toPubkey: TAG, lamports: 0 })];
   const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash('confirmed');
   const compile = (units, memo) => new VersionedTransaction(new TransactionMessage({ payerKey: wallet, recentBlockhash: blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: CU_PRICE }), ...ixs, ...(memo ? tag : tag.slice(1))] }).compileToV0Message());
+  const size = t => { try { return t.serialize().length; } catch { return 9999; } };
   let memo = true, tx = compile(700000, true);
-  if (tx.serialize().length > 1232) { memo = false; tx = compile(700000, false); }
-  if (tx.serialize().length > 1232) throw new Error('This launch is too big for one transaction. Try a shorter name.');
+  if (size(tx) > 1232) { memo = false; tx = compile(700000, false); }
+  if (size(tx) > 1232) throw new Error(buyUi > 0 ? 'This launch is too big for one transaction.' : 'This launch is too big for one transaction. Try a shorter name, ticker or description.');
   const signers = tx.message.staticAccountKeys.slice(0, tx.message.header.numRequiredSignatures).map(k => k.toBase58());
   if (signers.length !== 2 || signers[0] !== wallet.toBase58() || signers[1] !== mint.toBase58()) throw new Error('Unexpected signers: ' + signers.join(', '));
   const bal = await conn.getBalance(wallet).catch(() => null);
@@ -204,6 +208,43 @@ async function build(req) {
   tx = compile(units, memo);
   const post = sim.value.accounts && sim.value.accounts[0] ? sim.value.accounts[0].lamports : null;
   return { ok: true, tx: Buffer.from(tx.serialize()).toString('base64'), mint: mint.toBase58(), host: host.toBase58(), source: rq.source, depth: rq.pumpQuote ? rq.pumpQuote.depth : 0, lastValid: lastValidBlockHeight, units, bytes: tx.serialize().length, memo, tokens, cost: bal != null && post != null ? Math.max(0, (bal - post) / 1e9) : null, ...(dry && { dry: true, logs, used }) };
+}
+
+// ---------- the creator's first buy, right after the launch: buy_v2 on the new coin, paid in the host
+async function buyOp(req) {
+  const b = await body(req);
+  const wallet = pk(b.wallet, 'Connect a wallet first.'), mint = pk(b.mint, 'The coin address is missing.');
+  const ui = Math.max(0, Number(b.amount) || 0); if (!ui) throw new Error('Pick an amount to buy with.');
+  const dry = !!b.dry, s = sdk();
+  const mi = await conn.getAccountInfo(mint).catch(() => null);
+  if (!mi) throw Object.assign(new Error('The coin is not on chain yet. Try again in a few seconds.'), { code: 'pending' });
+  const tokenProgram = mi.owner;
+  let st; try { st = await s.fetchBuyState(mint, wallet, tokenProgram, b.host ? pk(b.host) : undefined); } catch (e) { throw Object.assign(new Error('The coin\'s curve is not readable yet. Try again in a few seconds.'), { code: 'pending' }); }
+  const qm = st.quoteMint, isSol = qm.toBase58() === SOL58;
+  let dec = 9;
+  if (!isSol) { const q = await conn.getParsedAccountInfo(qm).catch(() => null); dec = q && q.value && q.value.data && q.value.data.parsed ? q.value.data.parsed.info.decimals : null; if (dec == null) throw new Error("The host's decimals could not be read. Try again."); }
+  const quoteAmount = toRaw(ui, dec);
+  if (!dry) {
+    if (isSol) { const lam = await conn.getBalance(wallet).catch(() => 0); if (lam / 1e9 < ui + 0.01) throw new Error(`Your wallet holds ${(lam / 1e9).toFixed(4)} SOL, not enough for a ${ui} SOL buy plus fees.`); }
+    else { const bal = await balance(wallet.toBase58(), qm.toBase58()); if (bal.amount < ui) throw new Error(`Your wallet holds ${bal.amount} of the host, less than the ${ui} you want to buy with.`); }
+  }
+  const [g, feeConfig, qc] = await Promise.all([global(), s.fetchFeeConfig().catch(() => null), s.fetchQuoteControl().catch(() => null)]);
+  const amount = P.getBuyTokenAmountFromSolAmount({ global: g, feeConfig, mintSupply: st.bondingCurve.tokenTotalSupply, bondingCurve: st.bondingCurve, amount: quoteAmount, quoteMint: qm, quoteControl: qc, quoteTransferFee: st.quoteTransferFee });
+  let ixs = await P.PUMP_SDK.buyV2Instructions({ global: g, bondingCurveAccountInfo: st.bondingCurveAccountInfo, bondingCurve: st.bondingCurve, associatedUserAccountInfo: st.associatedUserAccountInfo, mint, user: wallet, amount, quoteAmount, slippage: 5, tokenProgram, quoteTokenProgram: st.quoteTokenProgram });
+  const CB = ComputeBudgetProgram.programId; ixs = ixs.filter(ix => !ix.programId.equals(CB));
+  const tag = SystemProgram.transfer({ fromPubkey: wallet, toPubkey: TAG, lamports: 0 });
+  const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash('confirmed');
+  const compile = units => new VersionedTransaction(new TransactionMessage({ payerKey: wallet, recentBlockhash: blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: CU_PRICE }), ...ixs, tag] }).compileToV0Message());
+  let tx; try { tx = compile(600000); tx.serialize(); } catch { throw new Error('This buy is too big for one transaction.'); }
+  const sim = await conn.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true, commitment: 'confirmed' });
+  const logs = (sim.value.logs || []).slice(-14);
+  if (sim.value.err) {
+    const all = (sim.value.logs || []).join('\n') + JSON.stringify(sim.value.err);
+    if (/insufficient lamports|insufficient funds|InsufficientFunds/i.test(all)) throw Object.assign(new Error('Your wallet is short for this buy and its fees.'), { logs });
+    throw Object.assign(new Error('The buy failed when we tried it against Solana, so nothing was sent. ' + (logs.filter(l => /error|failed/i.test(l)).slice(-1)[0] || JSON.stringify(sim.value.err)).slice(0, 220)), { logs });
+  }
+  const used = sim.value.unitsConsumed || 200000; tx = compile(Math.min(1400000, Math.ceil(used * 1.15) + 20000));
+  return { ok: true, tx: Buffer.from(tx.serialize()).toString('base64'), lastValid: lastValidBlockHeight, tokens: Number(amount.toString()) / 1e6, bytes: tx.serialize().length, ...(dry && { dry: true, used, logs }) };
 }
 
 // ---------- send: only host launches, to every RPC at once
@@ -282,6 +323,7 @@ module.exports = async (req, res) => {
     if (p === 'status') return out(res, 200, await status(q));
     if (req.method === 'POST' && p === 'meta') return out(res, 200, await meta(req));
     if (req.method === 'POST' && p === 'build') return out(res, 200, await build(req));
+    if (req.method === 'POST' && p === 'buy') return out(res, 200, await buyOp(req));
     if (req.method === 'POST' && p === 'send') return out(res, 200, await send(req));
     return out(res, 404, { ok: false, error: 'not found' });
   } catch (e) {
