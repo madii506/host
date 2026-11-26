@@ -12,7 +12,7 @@
 <meta property="og:title" content="HOST · docs">
 <meta property="og:image" content="https://host-one-sandy.vercel.app/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="/css/host.css?v=4">
+<link rel="stylesheet" href="/css/host.css?v=5">
 <script type="module" src="/js/page.js?v=3"></script>
 </head>
 <body class="page docs">
@@ -123,8 +123,10 @@
             <li><code>GET /api/hosts</code>: pump.fun's host list, with names, icons and prices from Jupiter.</li>
             <li><code>GET /api/check?mint=</code>: can this coin host, where it comes from, and the depth a coin inside it would have.</li>
             <li><code>GET /api/list</code>: every coin launched through host.</li>
+            <li><code>GET /api/pump</code>: pump coins trending on Jupiter this hour, and the newest ones.</li>
             <li><code>GET /api/config</code>: the live depth cap and the tag address.</li>
             <li><code>POST /api/meta</code>: stores a coin's image and metadata.</li>
+            <li><code>POST /api/buy</code>: the creator's first buy on a new coin, paid in the host.</li>
             <li><code>POST /api/build</code>, <code>/api/send</code>, <code>GET /api/status</code>: the launch, built, sent and watched.</li>
           </ul>
         </section>

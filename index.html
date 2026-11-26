@@ -16,14 +16,14 @@
 <meta name="twitter:image" content="https://host-one-sandy.vercel.app/img/og.jpg">
 <link rel="preload" href="/fonts/pixelify.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/unbounded.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/host.css?v=4">
-<script type="module" src="/js/home.js?v=4"></script>
+<link rel="stylesheet" href="/css/host.css?v=5">
+<script type="module" src="/js/home.js?v=5"></script>
 </head>
 <body class="home">
 <canvas id="bg" aria-hidden="true"></canvas>
 
 <nav class="dock on" id="dock" aria-label="HOST">
-  <a href="#how">How it works</a><a href="#hosts">Hosts</a><a href="#check">Check a coin</a><a href="#depth">Depth</a><a href="#calc">Calculator</a><a href="#guests">Guests</a><a href="#faq">FAQ</a><a href="/docs">Docs</a>
+  <a href="#how">How it works</a><a href="#hosts">Hosts</a><a href="#trending">Trending</a><a href="#stocks">Stocks</a><a href="#check">Check a coin</a><a href="#calc">Calculator</a><a href="#guests">Guests</a><a href="#faq">FAQ</a><a href="/docs">Docs</a>
   <button class="menu" id="menuBtn" type="button">Menu</button>
   <a class="go" href="/app">Launch</a>
 </nav>
@@ -39,6 +39,7 @@
       <h1 class="wm" id="wm">host</h1>
       <p class="hook">Launch inside any coin.</p>
       <div class="cta"><a class="btn g lg" href="/app">Launch a coin <span class="ar">→</span></a><a class="btn o lg" href="#how">How it works</a></div>
+      <div class="livewrap"><a class="live" id="live" href="/app" hidden><span class="k">LAUNCH INSIDE</span><span class="ic" id="lvIc"></span><span class="nm"><b id="lvSym"></b><i id="lvName"></i></span><span class="px"><b class="num" id="lvPx"></b><s class="chg" id="lvCh"></s></span><span class="ar">→</span></a><div class="ldots" id="lvDots"></div></div>
     </div>
   </header>
 
@@ -91,10 +92,30 @@
     </div>
   </section>
 
+  <!-- 05 trending -->
+  <section class="sec" id="trending">
+    <div class="wrap">
+      <div class="head"><div class="hl"><p class="ey"><b>05</b>Trending</p><h2 class="h2">What's trending <em>can host you.</em></h2></div>
+        <p class="hr rv">Pump coins people are trading this hour, from Jupiter. Launch inside one and every buy of your coin feeds it. host checks the coin when you pick it.</p></div>
+      <div class="hbar rv"><div class="chips" id="trTabs"><button class="chip on" data-t="trending" type="button">Trending this hour</button><button class="chip" data-t="fresh" type="button">Just launched</button></div><span class="tagl" id="trNote">LIVE · FROM JUPITER</span></div>
+      <div class="hgrid" id="trGrid"><div class="hempty">Reading what's trending…</div></div>
+    </div>
+  </section>
+
+  <!-- 06 stocks -->
+  <section class="sec tint" id="stocks">
+    <div class="wrap">
+      <div class="head"><div class="hl"><p class="ey"><b>06</b>Stocks</p><h2 class="h2">Launch inside <em>a stock.</em></h2></div>
+        <p class="hr rv">pump.fun's host list carries <span id="nStock2">a hundred</span> tokenized stocks. A coin inside NVDAx buys NVDAx, the tokenized share, on every buy.</p></div>
+      <div class="board rv" id="stockBoard"><div class="hempty">Reading the stock hosts…</div></div>
+      <div class="hmore"><button class="btn o" id="stockMore" type="button" hidden>Show more stocks</button></div>
+    </div>
+  </section>
+
   <!-- 05 check a coin -->
   <section class="sec" id="check">
     <div class="wrap">
-      <div class="head"><div class="hl"><p class="ey"><b>05</b>Check a coin</p><h2 class="h2">Can it host? <em>Ask the chain.</em></h2></div>
+      <div class="head"><div class="hl"><p class="ey"><b>07</b>Check a coin</p><h2 class="h2">Can it host? <em>Ask the chain.</em></h2></div>
         <p class="hr rv">Paste any contract. host asks pump.fun's program whether a new coin can be priced in it, and how deep it would sit.</p></div>
       <div class="card checker rv">
         <form id="ckForm" autocomplete="off"><label class="search big"><input id="ckIn" placeholder="Paste a coin's contract address" spellcheck="false" aria-label="A coin's contract address"></label><button class="btn g lg" type="submit">Check <span class="ar">→</span></button></form>
@@ -106,7 +127,7 @@
   <!-- 06 depth -->
   <section class="sec tint" id="depth">
     <div class="wrap depth">
-      <div><p class="ey"><b>06</b>Depth</p><h2 class="h2">Coins inside coins, <em><span id="depthN">five</span> deep.</em></h2>
+      <div><p class="ey"><b>08</b>Depth</p><h2 class="h2">Coins inside coins, <em><span id="depthN">five</span> deep.</em></h2>
         <p class="lead rv">A coin launched inside a pump coin can host a coin of its own. pump.fun allows <span id="depthN2">five</span> levels of coins inside coins, read live from its program. A buy at the bottom moves every coin above it.</p>
         <div class="dl" id="depthList">
           <div data-d="0"><b>BASE</b><span><strong>SOL, or a listed asset.</strong> ETH, BTC, a stock.</span></div>
@@ -122,7 +143,7 @@
   <!-- 07 calculator -->
   <section class="sec" id="calc">
     <div class="wrap">
-      <div class="head"><div class="hl"><p class="ey"><b>07</b>Calculator</p><h2 class="h2">Your buyers <em>buy the host.</em></h2></div>
+      <div class="head"><div class="hl"><p class="ey"><b>09</b>Calculator</p><h2 class="h2">Your buyers <em>buy the host.</em></h2></div>
         <p class="hr rv">Pick a host and the SOL your buyers put in. Live prices.</p></div>
       <div class="card calc rv">
         <div class="in">
@@ -143,7 +164,7 @@
   <!-- 08 compare -->
   <section class="sec tint" id="compare">
     <div class="wrap">
-      <div class="head"><div class="hl"><p class="ey"><b>08</b>Side by side</p><h2 class="h2">A normal launch, <em>and one inside a host.</em></h2></div></div>
+      <div class="head"><div class="hl"><p class="ey"><b>10</b>Side by side</p><h2 class="h2">A normal launch, <em>and one inside a host.</em></h2></div></div>
       <div class="cmp rv">
         <div class="cr hd"><span></span><span>A normal launch</span><span>A launch on host</span></div>
         <div class="cr"><span>Priced in</span><span>SOL</span><span><i class="ok">✓</i>The host you pick</span></div>
@@ -158,7 +179,7 @@
   <!-- 09 guests -->
   <section class="sec" id="guests">
     <div class="wrap">
-      <div class="head"><div class="hl"><p class="ey"><b>09</b>Guests</p><h2 class="h2">Coins launched <em>inside other coins.</em></h2></div>
+      <div class="head"><div class="hl"><p class="ey"><b>11</b>Guests</p><h2 class="h2">Coins launched <em>inside other coins.</em></h2></div>
         <p class="hr rv">Every coin launched through host, read from Solana, with the coin it lives in.</p></div>
       <div class="guests" id="guestList"><div class="gempty"><b>Reading the chain…</b></div></div>
     </div>
@@ -167,7 +188,7 @@
   <!-- 10 rules -->
   <section class="sec tint" id="rules">
     <div class="wrap">
-      <div class="head"><div class="hl"><p class="ey"><b>10</b>The rules</p><h2 class="h2">Three rules. <em>Every coin.</em></h2></div></div>
+      <div class="head"><div class="hl"><p class="ey"><b>12</b>The rules</p><h2 class="h2">Three rules. <em>Every coin.</em></h2></div></div>
       <div class="rules">
         <div class="rule card rv"><span class="ix">1</span><img src="/img/sp-cube.webp" alt=""><b>One host, for good.</b><p>Your coin is priced in the host you pick. The pair can't change after launch.</p></div>
         <div class="rule card rv d1"><span class="ix">2</span><img src="/img/sp-chain.webp" alt=""><b>Every buy goes through the host.</b><p>Buyers pay in the host, or their SOL is swapped into it first. The host sits in your curve.</p></div>
@@ -179,7 +200,7 @@
   <!-- 11 faq -->
   <section class="sec" id="faq">
     <div class="wrap faq">
-      <div><p class="ey"><b>11</b>Questions</p><h2 class="h2">Before you <em>launch.</em></h2></div>
+      <div><p class="ey"><b>13</b>Questions</p><h2 class="h2">Before you <em>launch.</em></h2></div>
       <div>
         <details class="qa"><summary>What is host?</summary><p>A launchpad for pump.fun coins that are priced inside another coin. Pick a host, launch inside it, and every buy of your coin goes through the host first.</p></details>
         <details class="qa"><summary>Which coins can be a host?</summary><p>Any pump coin, and every asset on pump.fun's quote list: crypto like ETH, BTC, XRP, SUI and SPX6900 through their Solana versions, big memes like WIF and BONK, and tokenized stocks. BNB coins aren't on the list yet. Use the checker to ask about any coin.</p></details>
