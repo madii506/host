@@ -132,7 +132,7 @@ function paint() {
   $('#nestR').textContent = host && host.usd ? `${HS()} ${price(host.usd)}` : '—';
   const usd = host && host.usd && b ? ` (about $${(b * host.usd).toLocaleString('en-US', { maximumFractionDigits: b * host.usd < 10 ? 2 : 0 })})` : '';
   $('#lCost').innerHTML = b
-    ? `You spend <b>${fmtN(b)} ${esc(HS())}</b>${usd} on your first buy, plus about <b>0.01 SOL</b> for the new accounts and network fees. host takes nothing.`
+    ? `You spend about <b>0.01 SOL</b> for the new accounts and network fees, then <b>${fmtN(b)} ${esc(HS())}</b>${usd} on your first buy, a second transaction right after the launch. host takes nothing.`
     : `You spend about <b>0.01 SOL</b> for the new accounts and network fees, and make no first buy. host takes nothing.`;
   go.innerHTML = !host ? 'Pick a host to launch <span class="ar">→</span>' : !wallet.address ? 'Connect a wallet to launch <span class="ar">→</span>' : `Launch ${t ? '$' + esc(t) : 'your coin'} inside ${esc(HS())} <span class="ar">→</span>`;
   $('#lPost').href = 'https://x.com/intent/post?text=' + encodeURIComponent(live
@@ -202,6 +202,27 @@ async function land(sig, b64, lastValid) {
   }
   throw new Error(`No answer from Solana yet. It may still land: check <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">the transaction ↗</a> before you try again.`);
 }
+// the first buy: its own transaction, right after the coin is live (create and buy together don't fit in one)
+async function firstBuy(mint, hm, b, hs, t) {
+  const li = flow.querySelector('[data-k="buy"]'); li.hidden = false;
+  try {
+    step('buy', 'run', `Building a buy of ${fmtN(b)} ${esc(hs)}…`);
+    let q = null;
+    for (let i = 0; i < 6 && !q; i++) { try { q = await api('buy', { wallet: wallet.address, mint, host: hm, amount: b }); } catch (e) { if (e.code !== 'pending' || i === 5) throw e; await sleep(2000); } }
+    step('buy', 'run', 'Approve the buy in your wallet.');
+    let signed;
+    try { signed = await wallet.signTx(fromB64(q.tx)); }
+    catch (e) { throw new Error(/reject|cancel|denied|declin/i.test(e && e.message || '') ? 'You cancelled the buy in your wallet.' : esc((e && e.message) || 'The wallet did not sign.')); }
+    const b64 = toB64(signed), { sig } = await api('send', { tx: b64 });
+    step('buy', 'run', 'Waiting for Solana…');
+    await land(sig, b64, q.lastValid);
+    step('buy', 'ok', `${fmtN(q.tokens || 0)} $${esc(t)} for ${fmtN(b)} ${esc(hs)} · <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">${esc(short(sig, 6))} ↗</a>`);
+    return { ok: true, sig };
+  } catch (e) {
+    step('buy', 'bad', `${(e && e.message) || esc(String(e))} Your coin is live: you can buy it on pump.fun.`);
+    return { ok: false };
+  }
+}
 async function launch() {
   if (busy) return;
   const t = T(), n = N(), b = BUY();
@@ -211,6 +232,7 @@ async function launch() {
   if (b && bal && b > bal.amount) { say(`Your wallet holds ${fmtN(bal.amount)} ${esc(HS())}, less than the ${fmtN(b)} you want to buy with.`, true); return; }
   lock(true); flow.hidden = false; st.hidden = true;
   flow.querySelectorAll('li').forEach(li => { li.className = ''; const s = li.querySelector('small'); if (s) s.textContent = ''; });
+  flow.querySelector('[data-k="buy"]').hidden = !(b > 0);
   flow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   const hs = HS(), hm = host.mint;
   try {
@@ -221,8 +243,8 @@ async function launch() {
 
     step('build', 'run', 'Building the launch and trying it against Solana…');
     const seed = ed.utils.randomPrivateKey(), pub = await ed.getPublicKeyAsync(seed), mint = b58(pub);
-    const r = await api('build', { wallet: wallet.address, mint, host: hm, name: n, symbol: t, uri: metaUri, buyHost: b });
-    step('build', 'ok', `${b ? `First buy: ${fmtN(b)} ${esc(hs)} for about ${fmtN(r.tokens || 0)} $${esc(t)}` : 'No first buy'}${r.cost != null ? ` · about ${r.cost.toFixed(4)} SOL in all` : ''} · D${r.depth}`);
+    const r = await api('build', { wallet: wallet.address, mint, host: hm, name: n, symbol: t, uri: metaUri, buyHost: 0 });
+    step('build', 'ok', `${r.cost != null ? `About ${r.cost.toFixed(4)} SOL for the new accounts and fees` : 'Tried against Solana: it works'} · your coin sits at D${r.depth}`);
 
     step('sign', 'run', 'Approve the launch in your wallet.');
     let signed;
@@ -239,7 +261,8 @@ async function launch() {
     step('land', 'run', 'Waiting for Solana…');
     const slot = await land(sig, b64, r.lastValid);
     step('land', 'ok', `Block ${slot.toLocaleString('en-US')}`);
-    live = { t, n, mint: r.mint, sig, hs };
+    live = { t, n, mint: r.mint, sig, hs, buy: null };
+    if (b > 0) live.buy = await firstBuy(r.mint, hm, b, hs, t);
     showLive(); metaUri = null; metaKey = null;
   } catch (e) {
     const li = flow.querySelector('li.run'); if (li) li.className = 'bad';
@@ -249,7 +272,7 @@ async function launch() {
 }
 function showLive() {
   const box = $('#lDone');
-  box.innerHTML = `<b>$${esc(live.t)} is live inside ${esc(live.hs)}.</b><p>Every buy of $${esc(live.t)} buys ${esc(live.hs)} first. It's on pump.fun now.</p>
+  box.innerHTML = `<b>$${esc(live.t)} is live inside ${esc(live.hs)}.</b><p>Every buy of $${esc(live.t)} buys ${esc(live.hs)} first. It's on pump.fun now${live.buy ? (live.buy.ok ? ', with your first buy in.' : '. Your first buy didn\'t go through, so buy it there.') : '.'}</p>
     <button class="ca" type="button" id="lMint"><span>COIN</span><code>${esc(live.mint)}</code><em>COPY</em></button>
     <div class="prow"><a class="btn g" href="https://pump.fun/coin/${esc(live.mint)}" target="_blank" rel="noopener">Open on pump.fun ↗</a><a class="btn o" href="https://solscan.io/tx/${esc(live.sig)}" target="_blank" rel="noopener">Solscan ↗</a><button class="btn o" type="button" id="lAgain">Launch another</button></div>`;
   box.hidden = false;
