@@ -45,7 +45,7 @@
             <li><b>Pick a host.</b> Tap one from pump.fun's list or paste any contract. host asks pump.fun's program whether it can host, and how deep your coin would sit.</li>
             <li><b>Add your coin.</b> An image (cropped square in your browser), a name, a ticker, a description and links.</li>
             <li><b>Choose a first buy, or none.</b> The first buy is paid in the host coin, from your wallet. host shows how much of the host you hold.</li>
-            <li><b>Launch.</b> The image and details go to IPFS through pump.fun's upload. host builds the transaction and tries it against Solana. Your wallet signs, then the page signs for the new coin's address, and the launch is sent.</li>
+            <li><b>Launch.</b> host stores the image and details as your coin's metadata, builds the transaction and tries it against Solana. Your wallet signs, then the page signs for the new coin's address, and the launch is sent.</li>
             <li><b>Live.</b> When Solana confirms, your coin is on pump.fun, priced in the host, and on the guest list.</li>
           </ol>
           <p><a class="btn g" href="/app">Open the app <span class="ar">→</span></a></p>
@@ -58,7 +58,7 @@
             <li><b>Compute budget.</b> The limit is set from a simulation of this exact launch, plus a margin.</li>
             <li><b>create_v2</b> on pump.fun's program, with the host as the quote mint. This makes the coin, its metadata and its curve.</li>
             <li><b>buy_v2</b>, only if you chose a first buy. It pays in the host from your wallet's host account.</li>
-            <li><b>A memo</b> reading <code>host:&lt;your coin&gt;:&lt;the host&gt;</code> and a <b>0 SOL transfer</b> to host's tag address. That's how the guest list finds launches on chain. It moves no money.</li>
+            <li><b>A 0 SOL transfer</b> to host's tag address, plus a memo reading <code>host:&lt;your coin&gt;:&lt;the host&gt;</code> when it fits in the transaction. That's how the guest list finds launches on chain. It moves no money.</li>
           </ul>
           <p>Two keys sign it: your wallet (it pays) and the new coin's address. That address is a key made in your browser for this launch. It signs once and is never sent anywhere.</p>
           <p>Before your wallet sees anything, host simulates the transaction on Solana mainnet. If it would fail, you get the reason and nothing is sent.</p>
@@ -112,7 +112,7 @@
 
         <section id="guests">
           <h2><small>09</small>The guest list</h2>
-          <p>Every launch through host sends 0 SOL to host's tag address with a memo naming the coin and its host. The guest list reads that address's history from Solana, keeps the launches that called pump.fun's program, and adds names, images and curve progress.</p>
+          <p>Every launch through host sends 0 SOL to host's tag address. The guest list reads that address's history from Solana, keeps the launches that called pump.fun's program, reads the coin and its host from each one, and adds names, images and curve progress.</p>
           <p>Anyone can check it: <a href="https://solscan.io/account/EuU8Xw9aYnHUAeDkv1CshvmnSXLpPd2vrao9gsXhWXFv" target="_blank" rel="noopener">the tag address on Solscan ↗</a>.</p>
         </section>
 
@@ -123,6 +123,7 @@
             <li><code>GET /api/check?mint=</code>: can this coin host, where it comes from, and the depth a coin inside it would have.</li>
             <li><code>GET /api/list</code>: every coin launched through host.</li>
             <li><code>GET /api/config</code>: the live depth cap and the tag address.</li>
+            <li><code>POST /api/meta</code>: stores a coin's image and metadata.</li>
             <li><code>POST /api/build</code>, <code>/api/send</code>, <code>GET /api/status</code>: the launch, built, sent and watched.</li>
           </ul>
         </section>
