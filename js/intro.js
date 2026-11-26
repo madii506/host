@@ -1,14 +1,12 @@
 // The intro, kept simple and wordless: a coin appears, a smaller coin drops inside it, one ring goes out, and the site
-// fades in. It plays when you arrive, not when you come back from another page of the site. A click or a key skips it.
+// fades in. It plays on every visit to the home page (gentler when the device asks for less motion). A click or a key skips it.
 import { pixCoin, C } from './scenes.js';
 
 const el = document.getElementById('intro');
 const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const inside = (() => { try { return !!document.referrer && new URL(document.referrer).origin === location.origin; } catch { return false; } })();
 const done = () => { document.documentElement.classList.remove('intro-lock'); if (el && el.parentNode) el.remove(); dispatchEvent(new Event('host:intro-done')); };
 
 if (!el) { /* nothing to play */ }
-else if (reduced || inside) { el.remove(); }
 else {
   document.documentElement.classList.add('intro-lock');
   const cv = el.querySelector('canvas'), c = cv.getContext('2d');
@@ -36,7 +34,8 @@ else {
     // the guest: a smaller coin drops in and lands inside it
     if (t > T_IN * 0.6) {
       const p = cl((t - T_IN * 0.6) / (T_DROP - T_IN * 0.6));
-      pixCoin(c, cx, cy - (1 - bounce(p)) * H * 0.5, R * 0.42 * grow, '', 'gold');
+      if (reduced) { c.globalAlpha = p; pixCoin(c, cx, cy, R * 0.42 * grow, '', 'gold'); c.globalAlpha = 1; }
+      else pixCoin(c, cx, cy - (1 - bounce(p)) * H * 0.5, R * 0.42 * grow, '', 'gold');
     }
     // one ring goes out when it lands
     if (t > T_DROP - 0.1) {
