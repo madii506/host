@@ -1,4 +1,5 @@
 // The home page: clean sections, live data from pump.fun and Solana, no scroll tricks.
+import './intro.js';
 import { $, $$, esc, clamp, reduced, short } from './util.js';
 import { pvp, flow, depthChain, background } from './scenes.js';
 
@@ -8,7 +9,8 @@ $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => { const h = a.g
 
 // the wordmark: letters settle in once, on load
 const wm = $('#wm'); wm.innerHTML = [...wm.textContent].map((ch, i) => `<span class="ch" style="opacity:0;transform:translateY(30px);transition:transform .9s var(--ease) ${0.08 + i * 0.07}s,opacity .7s ${0.08 + i * 0.07}s">${esc(ch)}</span>`).join('');
-requestAnimationFrame(() => requestAnimationFrame(() => $$('#wm .ch').forEach(s => { s.style.opacity = 1; s.style.transform = 'none'; })));
+const heroIn = () => requestAnimationFrame(() => requestAnimationFrame(() => $$('#wm .ch').forEach(s => { s.style.opacity = 1; s.style.transform = 'none'; })));
+if (document.getElementById('intro')) addEventListener('host:intro-done', heroIn, { once: true }); else heroIn();
 
 // sections fade in once, gently
 const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } }), { threshold: 0.1 });
