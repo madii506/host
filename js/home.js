@@ -15,7 +15,9 @@ const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting
 $$('.rv').forEach(el => io.observe(el));
 
 // the marquee
-const mq = $('#marq'); if (mq) { mq.innerHTML += mq.innerHTML; let x = 0; const tick = () => { x = (x - 0.5) % (mq.scrollWidth / 2); mq.style.transform = `translate3d(${x}px,0,0)`; requestAnimationFrame(tick); }; if (!reduced) requestAnimationFrame(tick); }
+const mq = $('#marq'); let mqx = 0;
+const setMarq = html => { if (!mq) return; mq.innerHTML = html + html; mqx = 0; };
+if (mq) { setMarq(mq.innerHTML); const tick = () => { mqx = (mqx - 0.5) % (mq.scrollWidth / 2 || 1); mq.style.transform = `translate3d(${mqx}px,0,0)`; requestAnimationFrame(tick); }; if (!reduced) requestAnimationFrame(tick); }
 
 // 01: the split you drag (it sways on its own until you touch it)
 let split = 0.5, held = false, touched = false;
@@ -33,6 +35,9 @@ depthChain($('#depthCv'), lvl => $$('#depthList > div').forEach((d, i) => d.clas
 // live numbers
 const price = v => v == null ? '—' : v >= 1000 ? '$' + Math.round(v).toLocaleString('en-US') : v >= 1 ? '$' + v.toFixed(2) : v >= 0.01 ? '$' + v.toFixed(4) : '$' + Number(v.toPrecision(3));
 const put = (sel, v) => { const e = $(sel); if (e) e.textContent = v; };
+const chg = v => v == null ? '' : `<s class="chg ${v >= 0 ? 'up' : 'dn'}">${v >= 0 ? '+' : ''}${Math.abs(v) >= 100 ? Math.round(v) : v.toFixed(1)}%</s>`;
+const usdK = v => v == null ? '—' : v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' + (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? '$' + (v / 1e3).toFixed(0) + 'K' : '$' + Math.round(v);
+const ico = (src, ch) => src && /^https:\/\//.test(src) ? `<img src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : esc((ch || '?').slice(0, 1));
 const WORD = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'];
 
 // 04: hosts
@@ -69,7 +74,9 @@ fetch('/api/hosts').then(r => r.json()).then(j => {
   $('#nAll').textContent = n('all'); $('#nCrypto').textContent = n('crypto'); $('#nMeme').textContent = n('meme'); $('#nStock').textContent = n('stock');
   put('#stHosts', HOSTS.length);
   if (j.maxDepth) { put('#stDepth', j.maxDepth); const w = WORD[j.maxDepth] || j.maxDepth; $('#depthN').textContent = w; $('#depthN2').textContent = w; $$('.depthN3').forEach(e => (e.textContent = w)); }
-  renderHosts();
+  renderHosts(); renderStocks();
+  const live = HOSTS.filter(h => h.usd && h.symbol).slice(0, 18);
+  if (live.length) setMarq(live.map((h, i) => `<em class="tk"><span>$${esc(h.symbol.replace(/^\$/, ''))}</span><b class="num">${price(h.usd)}</b>${chg(h.ch24h)}</em><i></i>${i % 6 === 5 ? '<span>EVERY BUY FEEDS THE HOST</span><i></i>' : ''}`).join(''));
   const pick = ['ETH', 'WBTC', 'PUMP', '$WIF', 'Bonk', 'TRUMP'];
   const rank = h => { const i = pick.indexOf(h.symbol); return i < 0 ? 99 : i; };
   const top = HOSTS.filter(h => h.usd).sort((a, b) => rank(a) - rank(b) || (b.liq || 0) - (a.liq || 0));
@@ -104,3 +111,48 @@ fetch('/api/list').then(r => r.json()).then(j => {
   if (!j.coins.length) { box.innerHTML = `<div class="gempty"><img src="/img/sp-gold.webp" alt=""><b>No guests yet.</b><span>The first coin launched inside a host through host shows up here, with the coin it lives in.</span><a class="btn g" href="/app">Launch the first one <span class="ar">→</span></a></div>`; return; }
   box.innerHTML = j.coins.slice(0, 12).map(c => `<a class="grow" href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener"><span class="ic">${c.image ? `<img src="${esc(c.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : esc((c.symbol || '?').slice(0, 1))}</span><span class="nm"><b>${esc(c.symbol ? '$' + c.symbol : short(c.mint, 4))}</b><i>${esc(c.name || '')}</i></span><span class="in">inside <b>${esc(c.hostSymbol ? '$' + c.hostSymbol : short(c.host, 4))}</b></span><span class="bar"><i style="width:${Math.max(2, c.curve || 0)}%"></i><em>${c.complete ? 'GRADUATED' : c.curve != null ? Math.round(c.curve) + '% TO GRADUATE' : 'ON THE CURVE'}</em></span><span class="age">${ago(c.time)}</span></a>`).join('');
 }).catch(() => { $('#guestList').innerHTML = '<div class="gempty"><b>The chain didn\'t answer.</b><span>Refresh in a moment.</span></div>'; });
+
+// 06: stocks, as a board
+let stockShown = 12;
+function renderStocks() {
+  const box = $('#stockBoard'), more = $('#stockMore'); if (!box) return;
+  const st = HOSTS.filter(h => h.cat === 'stock' && h.symbol);
+  put('#nStock2', st.length);
+  if (!st.length) { box.innerHTML = '<div class="hempty">No stock hosts on pump.fun\'s list right now.</div>'; more.hidden = true; return; }
+  box.innerHTML = '<div class="srow hd"><span>Stock</span><span>Price</span><span>24h</span><span></span></div>' + st.slice(0, stockShown).map(h => `<a class="srow" href="/app#host=${esc(h.mint)}"><span class="sk"><span class="ic">${ico(h.icon, h.symbol)}</span><b>${esc(h.symbol)}</b><i>${esc((h.name || '').replace(/ ?- ?Backpack.*$/i, ''))}</i></span><span class="num">${price(h.usd)}</span><span>${chg(h.ch24h) || '<s class="chg">—</s>'}</span><span class="go">Launch inside <span class="ar">→</span></span></a>`).join('');
+  more.hidden = st.length <= stockShown;
+}
+$('#stockMore') && $('#stockMore').addEventListener('click', () => { stockShown += 12; renderStocks(); });
+
+// 05: what's trending on pump.fun right now, and the newest coins
+let PUMP = { trending: [], fresh: [] }, trTab = 'trending';
+function renderTrending() {
+  const box = $('#trGrid'); if (!box) return;
+  const list = PUMP[trTab] || [];
+  if (!list.length) { box.innerHTML = `<div class="hempty">${trTab === 'fresh' ? 'No new pump coins in the feed right now.' : 'Jupiter\'s trending list didn\'t answer. Refresh in a moment.'}</div>`; return; }
+  box.innerHTML = list.slice(0, 15).map((c, i) => `<a class="hcard tr" style="animation-delay:${i * 0.02}s" href="/app#host=${esc(c.mint)}"><span class="ic">${ico(c.icon, c.symbol)}</span><b>${esc(c.symbol || short(c.mint, 4))}</b><span>${esc(c.name || '')}</span><em><i>${usdK(c.mcap)} <small>MCAP</small></i>${chg(trTab === 'fresh' ? c.ch24h ?? c.ch1h : c.ch1h)}</em><u>Launch inside →</u></a>`).join('');
+}
+$$('#trTabs .chip').forEach(b => b.addEventListener('click', () => { trTab = b.dataset.t; $$('#trTabs .chip').forEach(x => x.classList.toggle('on', x === b)); renderTrending(); }));
+
+// the hero: one live card, cycling through what's trending
+const lv = $('#live'); let lvItems = [], lvAt = 0, lvHold = false, lvTimer = 0;
+function lvShow(i) {
+  const c = lvItems[i]; if (!c) return;
+  lv.href = '/app#host=' + c.mint;
+  $('#lvIc').innerHTML = ico(c.icon, c.symbol); $('#lvSym').textContent = '$' + String(c.symbol || '').replace(/^\$/, ''); $('#lvName').textContent = c.name || '';
+  $('#lvPx').textContent = c.mcap ? usdK(c.mcap) + ' mcap' : price(c.usd); $('#lvCh').outerHTML = chg(c.ch1h ?? c.ch24h).replace('<s class="chg', '<s id="lvCh" class="chg') || '<s id="lvCh" class="chg"></s>';
+  $$('#lvDots i').forEach((d, k) => d.classList.toggle('on', k === i));
+}
+function lvNext() { if (lvHold || document.hidden || lvItems.length < 2) return; lv.classList.add('fade'); setTimeout(() => { lvAt = (lvAt + 1) % lvItems.length; lvShow(lvAt); lv.classList.remove('fade'); }, 420); }
+if (lv) { lv.addEventListener('mouseenter', () => (lvHold = true)); lv.addEventListener('mouseleave', () => (lvHold = false)); }
+
+fetch('/api/pump').then(r => r.json()).then(j => {
+  if (!j || !j.ok) throw new Error();
+  PUMP = j; renderTrending();
+  lvItems = j.trending.filter(c => c.symbol).slice(0, 8);
+  if (lv && lvItems.length) {
+    $('#lvDots').innerHTML = lvItems.map(() => '<i></i>').join('');
+    lvShow(0); lv.hidden = false; requestAnimationFrame(() => lv.classList.add('in'));
+    if (!reduced) lvTimer = setInterval(lvNext, 4600);
+  }
+}).catch(() => { const b = $('#trGrid'); if (b) b.innerHTML = '<div class="hempty">Jupiter\'s trending list didn\'t answer. Refresh in a moment.</div>'; });

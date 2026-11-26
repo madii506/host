@@ -71,7 +71,7 @@ function renderHost() {
     const where = host.source === 'pumpCoin' ? `A pump coin · your coin sits at D${host.depth}` : host.source === 'quoteControl' ? "On pump.fun's host list" : 'Listed on pump.fun';
     hCur.innerHTML = `<span class="ic">${icon(host.icon, host.symbol)}</span><div><b>${esc(host.symbol ? '$' + host.symbol : short(host.mint, 5))}</b><span>${esc(host.name ? host.name + ' · ' : '')}${esc(where)}</span></div><span class="hstat ok" id="hStat">CAN HOST</span>`;
   }
-  $$('#hOpts button').forEach(b => b.classList.toggle('on', !!host && b.dataset.m === host.mint));
+  $$('#hOpts button, #hTrend button').forEach(b => b.classList.toggle('on', !!host && b.dataset.m === host.mint));
 }
 async function setHost(m) {
   m = String(m || '').trim();
@@ -102,6 +102,15 @@ api('hosts').then(j => {
   $$('#hOpts button').forEach(b => b.addEventListener('click', () => setHost(b.dataset.m)));
   renderHost();
 }).catch(() => { hOpts.innerHTML = '<span class="hstat bad">pump.fun\'s host list didn\'t load. Paste a contract instead.</span>'; });
+// what's trending on pump.fun right now, one tap away
+api('pump').then(j => {
+  const tr = (j.trending || []).filter(c => c.symbol).slice(0, 6); if (!tr.length) return;
+  const box = $('#hTrend'); box.hidden = false;
+  const pc = v => v == null ? '' : `<s class="chg ${v >= 0 ? 'up' : 'dn'}">${v >= 0 ? '+' : ''}${Math.abs(v) >= 100 ? Math.round(v) : v.toFixed(1)}%</s>`;
+  box.innerHTML = '<span>TRENDING</span>' + tr.map(c => `<button type="button" data-m="${esc(c.mint)}">${c.icon && /^https:\/\//.test(c.icon) ? `<img src="${esc(c.icon)}" alt="" referrerpolicy="no-referrer">` : '<i></i>'}${esc(c.symbol)} ${pc(c.ch1h)}</button>`).join('');
+  $$('#hTrend button').forEach(b => b.addEventListener('click', () => setHost(b.dataset.m)));
+  renderHost();
+}).catch(() => { });
 
 // ---------- the form
 const f = $('#lform'), name = $('#lName'), tick = $('#lTick'), desc = $('#lDesc'), xh = $('#lX'), tg = $('#lTg'), web = $('#lWeb'), file = $('#lImg'), buy = $('#lBuy'), go = $('#lGo'), flow = $('#lFlow'), st = $('#lStatus');
