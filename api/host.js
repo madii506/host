@@ -71,7 +71,7 @@ async function jup(mints) {
 const cat = t => {
   const n = `${t.name || ''} ${t.symbol || ''}`;
   if (/xStock|Backpack Securities|PreStock|Pre-IPO|Securities|\bETF\b|Index/i.test(n)) return 'stock';
-  if (/Portal|Wormhole|Wrapped|Bridged|Staked|Coinbase|USD|\bSUI\b|\bHYPE\b|\bPUMP\b|\bORE\b|\bNEAR\b|\bJUP\b|\bW\b|Ether|Bitcoin|BTC|ETH|XRP/i.test(n)) return 'crypto';
+  if (/Portal|Wormhole|Wrapped|Bridged|Staked|Coinbase|USD|\bSUI\b|\bHYPE\b|\bPUMP\b|\bORE\b|\bNEAR\b|\bJUP\b|\bW\b|\bRAY\b|Raydium|\bJTO\b|Jito|\bPYTH\b|\bHNT\b|Helium|\bRENDER\b|\bORCA\b|\bDRIFT\b|\bKMNO\b|\bTNSR\b|\bMNDE\b|\bJLP\b|Ether|Bitcoin|BTC|ETH|XRP|Solana/i.test(n)) return 'crypto';
   return 'meme';
 };
 
@@ -114,25 +114,44 @@ async function balance(walletS, mintS) {
   return { ok: true, amount: ui, sol: sol == null ? null : sol / 1e9 };
 }
 
-// ---------- the coin's image and metadata, to IPFS through pump.fun's own upload
+// ---------- the coin's image and metadata: to IPFS through pump.fun's own upload, or to host's own storage when that fails
+const blob = () => require('@vercel/blob');
+async function pumpIpfs({ buf, type, ext, name, symbol, desc, x, tg, web }) {
+  const fd = new FormData();
+  fd.append('file', new Blob([buf], { type }), 'image.' + ext);
+  fd.append('name', name); fd.append('symbol', symbol); fd.append('description', desc);
+  if (x) fd.append('twitter', x); if (tg) fd.append('telegram', tg); if (web) fd.append('website', web);
+  fd.append('showName', 'true');
+  const r = await fetch('https://pump.fun/api/ipfs', { method: 'POST', body: fd, headers: { accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`pump.fun upload ${r.status}: ${text.replace(/\s+/g, ' ').slice(0, 160)}`);
+  let j; try { j = JSON.parse(text); } catch { throw new Error('pump.fun upload returned no JSON'); }
+  if (!j || !j.metadataUri) throw new Error('pump.fun upload returned no metadata link');
+  return { uri: j.metadataUri, image: (j.metadata && j.metadata.image) || null, via: 'ipfs' };
+}
+async function ownStore({ buf, type, ext, name, symbol, desc, x, tg, web }) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('no storage connected');
+  const id = require('crypto').createHash('sha256').update(buf).update(name + '|' + symbol + '|' + desc + '|' + x + '|' + tg + '|' + web).digest('hex').slice(0, 24);
+  const put = (path, data, contentType) => blob().put('host/' + path, data, { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType, cacheControlMaxAge: 31536000 }).then(r => r.url);
+  const image = await put(`i/${id}.${ext}`, buf, type);
+  const json = { name, symbol, description: desc, image, showName: true, createdOn: 'https://host-one-sandy.vercel.app', ...(x && { twitter: x }), ...(tg && { telegram: tg }), ...(web && { website: web }) };
+  const uri = await put(`m/${id}.json`, JSON.stringify(json), 'application/json');
+  return { uri, image, via: 'host' };
+}
 async function meta(req) {
   const b = await body(req);
-  const name = clean(b.name, 32).replace(/[<>]/g, ''), symbol = clean(b.symbol, 10).toUpperCase().replace(/^\$/, ''), desc = clean(b.desc, 500);
+  const name = clean(b.name, 32).replace(/[<>]/g, ''), symbol = clean(b.symbol, 10).toUpperCase().replace(/^\$/, ''), desc0 = clean(b.desc, 500);
   if (!name) throw new Error('Give your coin a name.');
   if (!/^[A-Z0-9]{1,10}$/.test(symbol)) throw new Error('The ticker can use letters and numbers, up to 10.');
   const m = /^data:(image\/(png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
   if (!m) throw new Error('Add an image (png, jpg, webp or gif).');
   const buf = Buffer.from(m[3], 'base64'); if (buf.length > 1.5e6) throw new Error('That image is too big.');
   const x = link(b.x, /^https:\/\/(www\.)?(x|twitter)\.com\//i, 'X'), tg = link(b.telegram, /^https:\/\/(www\.)?t\.me\//i, 'Telegram'), web = link(b.website, null, 'website');
-  const fd = new FormData();
-  fd.append('file', new Blob([buf], { type: m[1] }), 'image.' + (m[2] === 'jpeg' ? 'jpg' : m[2]));
-  fd.append('name', name); fd.append('symbol', symbol); fd.append('description', desc || `${name} ($${symbol}), launched inside another coin on host.`);
-  fd.append('twitter', x); fd.append('telegram', tg); fd.append('website', web); fd.append('showName', 'true');
-  const r = await fetch('https://pump.fun/api/ipfs', { method: 'POST', body: fd, signal: AbortSignal.timeout(25000) });
-  if (!r.ok) throw new Error(`The image upload didn't go through (${r.status}). Try again in a moment.`);
-  const j = await r.json();
-  if (!j || !j.metadataUri) throw new Error('The image upload returned nothing. Try again.');
-  return { ok: true, uri: j.metadataUri, image: (j.metadata && j.metadata.image) || null, name, symbol };
+  const args = { buf, type: m[1], ext: m[2] === 'jpeg' ? 'jpg' : m[2], name, symbol, desc: desc0 || `${name} ($${symbol}), launched inside another coin on host.`, x, tg, web };
+  const why = [];
+  try { return { ok: true, name, symbol, ...(await pumpIpfs(args)) }; } catch (e) { why.push(e.message); }
+  try { return { ok: true, name, symbol, ...(await ownStore(args)) }; } catch (e) { why.push(e.message); }
+  throw new Error("The image upload didn't go through. Try again in a moment. (" + why.join(' · ').slice(0, 260) + ')');
 }
 
 // ---------- build: create the coin priced in the host, and the creator's first buy, in one transaction
